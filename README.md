@@ -26,7 +26,6 @@ Builders using __NotVault__ benefit from a rich toolkit of functionality in the 
     - [Tokens](#sdk-tokens)
     - [Deals](#sdk-deals)
 4. [Deployed Contracts](#contract_addresses)
-4. [Building](#building)
 
 
 <div id='technical_overview'></div>
@@ -735,52 +734,3 @@ The current contracts are in development and shouldn't be used in production at 
 | Vault    | withdraw      | 374,927    | 400,000   |
 | Vault    | createRequest | 1,152,414  | 1,200,000 |
 | Vault    | acceptRequest | 618,821    | 650,000   |
-
-
-
-<div id='building'></div>
-
-# Building Steps
-Building the entire repo requires a few steps.
-- Install the necessary tools
-- Build the circuits
-- Build the evm project
-- Deploy the contracts
-- Build the sdk project
-- Build the app
-
-### Prerequisites
-The compilation and development environment necessary are:
-#### Rust
-A fast and memory efficient language used by the [circom](https://docs.circom.io) compiler.
-
-https://www.rust-lang.org
-```shell
-curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
-```
-#### Circom 2.0
-The zero knowledge circuit development environment.
-
-https://docs.circom.io
-```shell
-git clone https://github.com/iden3/circom.git
-cd circom
-cargo build --release
-cargo install --path circom
-```
-#### SnarkJS
-The zkSnark environment.
-
-https://github.com/iden3/snarkjs
-```shell
-npm install -g snarkjs
-```
-Once the environment is correctly setup, you can proceed with compiling the cirtuits.
-
-## Build the circuits
-In the evm project compile the circuits using the following commands:
-```shell
-cd circuits
-sh compile.sh
-cd ...
-```
