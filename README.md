@@ -1,21 +1,33 @@
 # NotVault &nbsp; &nbsp; | &nbsp; &nbsp; The Self-Sovereignty SDK
 
-__NotVault__ is an open-source SDK that enables the rapid and safe development of self-sovereign data workflows. __NotVault__ enables confidential commerce / payments, token transfers, file management and the use of verifiable credentials. The toolkit simplifies the implementation of Zero Knowledge Proof (ZKP) technology, while applying best practices for encryption, decentralisation and peer-to-peer / operations for all data.
+The NotVault SDK is an open-source toolset designed to foster the swift and secure creation of self-sovereign data workflows. Its functionality spans across multiple domains including confidential commerce and payments, token transfers, file management, and the application of verifiable credentials. 
 
-**NotVaul** is analogous to a wallet since it allows users to link a contact ID like an email to their wallet in a private way. Furthermore, the wallet creates a new public / private key pair which is used to encrypt and sign data within the ecosystem, without needing access to the keys of the ETH wallet (Metamask) which is typically not accessible through the API. The contact ID allows a more user-friendly way of connecting to other identities. Instead of needing to input a wallet address, users can instead input an email for example.
+With a focus on streamlining the incorporation of Zero Knowledge Proof (ZKP) technology, NotVault places an emphasis on best practices for encryption, decentralisation, and peer-to-peer operations in all data exchanges.
 
-The key principles are to use the following as much as possible:
-- **Peer-to-peer**: in order to mitigate single point of failure risks.
-- **Encryption**: to ensure confidentiality
-- **Zero Knowledge Proofs**: to minimise data foot print when communicating
+## Core Principles
 
-Builders using __NotVault__ benefit from a rich toolkit of functionality in the form of smart contracts and client-side [typescript](https://www.typescriptlang.org) modules that include:
-- **Wallet**: Stores encrypted keys and encrypted metadata.
-- **Credentials**: [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof) credental proof generation and verification.
-- **Vault**: manage confidential token balances and transfers.
-- **Files**: enables a self-sovereign and encrypted file storage capability through [IPFS](https://ipfs.tech).
-- **Commercial Deals**: enable the life-cycle management of transactional / contractual agreements including their financial settlement and self-custody escrows of payment amounts through a peer-to-peer, self-custody platform.
-- **Service Bus**: enables a confidential messaging service that ensures the integrity regarding of timestamp, source and underlying message using a [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof).
+NotVault operates on three fundamental principles:
+
+1. **Peer-to-Peer:** To mitigate any risks associated with a single point of failure.
+2. **Encryption:** To maintain confidentiality at all times.
+3. **Zero Knowledge Proofs:** To minimize data footprints during communication.
+
+The functionality of NotVault mirrors that of a wallet, facilitating the private linkage of a contact ID (such as an email) to a user's wallet. Additionally, it generates a new public/private key pair used for data encryption and signing within the ecosystem. This system negates the need to access the keys of the Ethereum wallet (typically inaccessible via API) and provides a more user-friendly method of connecting with other identities.
+
+## Key Features
+
+Developers leveraging NotVault can access a plethora of features including:
+
+- **Wallet:** Safeguards encrypted keys and metadata.
+- **Credentials:** Facilitates the generation and verification of [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof) credential proofs.
+- **Vault:** Manages confidential token balances and transfers.
+- **Files:** Enables self-sovereign and encrypted file storage capability through [IPFS](https://ipfs.tech).
+- **Commercial Deals:** Supports the lifecycle management of transactional or contractual agreements, inclusive of their financial settlement. It offers self-custody escrows of payment amounts via a peer-to-peer platform.
+- **Service Bus:** Provides a confidential messaging service, ensuring integrity of timestamp, source, and underlying message using a [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof).
+
+Harness the power of NotVault SDK to expedite the development of secure, decentralized applications and services.
+
+----
 
 # Information
 For more detailed information please go to our [GITBOOK](https://docs.notcentralised.com).
