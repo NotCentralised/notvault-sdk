@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.4.0 (notvault.ts)
+ NotVault SDK for Typescript v0.4.3 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -60,7 +60,7 @@ export class NotVault
             this.confidentialVault = new Contract(this.config.contracts.vaultAddress, ConfidentialVault.abi, signer);
             this.confidentialDeal = new Contract(this.config.contracts.dealAddress, ConfidentialDeal.abi, signer);
             this.confidentialOracle = new Contract(this.config.contracts.oracleAddress, ConfidentialOracle.abi, signer);
-            this.confidentialServiceBus = new Contract(this.config.contracts.serviceBusAddress, ConfidentialServiceBus.abi, signer);
+            this.confidentialServiceBus = new Contract(this.config.contracts.serviceAddress, ConfidentialServiceBus.abi, signer);
         }
         else{
             this.config = getConfig(chainId)

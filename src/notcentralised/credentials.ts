@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Documents SDK for Typescript v0.4.0 (credentials.ts)
+ Documents SDK for Typescript v0.4.3 (credentials.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

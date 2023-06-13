@@ -1,6 +1,6 @@
 {
   "name": "@notcentralised/notvault-sdk",
-  "version": "0.4.0",
+  "version": "0.4.3",
   "description": "NotVault is an sdk developed by NotCentralised to build self-sovereign dapps with encryption, zk proofs, ipfs and evm.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

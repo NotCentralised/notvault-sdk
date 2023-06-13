@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.4.0 (config.ts)
+ Config SDK for Typescript v0.4.3 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -58,7 +58,7 @@ export type Config = {
         vaultAddress: string, 
         dealAddress: string, 
         oracleAddress: string,
-        serviceBusAddress: string 
+        serviceAddress: string 
     },
     axios: {
         get: (cid: string) => {},
