@@ -18,6 +18,7 @@ export { Tokens, SendRequest, Balance, zeroAddress } from './tokens';
 export { Deals } from './deals';
 export { Credentials, Credential, Schema, Proof } from './credentials';
 export { Files, FileEntry } from './files';
+export { ServiceBus } from './servicebus';
 export * from './config';
 export * from './proof';
 export * from './encryption';

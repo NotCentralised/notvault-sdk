@@ -21,6 +21,7 @@ import ConfidentialWallet from './abi/ConfidentialWallet.json';
 import ConfidentialVault from './abi/ConfidentialVault.json';
 import ConfidentialDeal from './abi/ConfidentialDeal.json';
 import ConfidentialOracle from './abi/ConfidentialOracle.json';
+import ConfidentialServiceBus from './abi/ConfidentialServiceBus.json';
 
 import { zeroAddress } from './tokens';
 import { getConfig, Config } from './config';
@@ -39,6 +40,7 @@ export class NotVault
     confidentialVault?: Contract;
     confidentialDeal?: Contract;
     confidentialOracle?: Contract;
+    confidentialServiceBus?: Contract;
  
     signer?: Signer;
     config?: Config;
@@ -58,6 +60,7 @@ export class NotVault
             this.confidentialVault = new Contract(this.config.contracts.vaultAddress, ConfidentialVault.abi, signer);
             this.confidentialDeal = new Contract(this.config.contracts.dealAddress, ConfidentialDeal.abi, signer);
             this.confidentialOracle = new Contract(this.config.contracts.oracleAddress, ConfidentialOracle.abi, signer);
+            this.confidentialServiceBus = new Contract(this.config.contracts.serviceBusAddress, ConfidentialServiceBus.abi, signer);
         }
         else{
             this.config = getConfig(chainId)
