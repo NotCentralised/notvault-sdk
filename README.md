@@ -1,31 +1,25 @@
 # NotVault &nbsp; &nbsp; | &nbsp; &nbsp; The Self-Sovereignty SDK
 
-The NotVault SDK is an open-source toolset designed to foster the swift and secure creation of self-sovereign data workflows. Its functionality spans across multiple domains including confidential commerce and payments, token transfers, file management, and the application of verifiable credentials. 
-
-With a focus on streamlining the incorporation of Zero Knowledge Proof (ZKP) technology, NotVault places an emphasis on best practices for encryption, decentralisation, and peer-to-peer operations in all data exchanges.
+The **NotVault** SDK is an open-source toolset designed for the swift and secure creation of self-sovereign data workflows. Its functionality spans multiple use cases, including confidential commerce and payments, token transfers, file management, and the application of verifiable credentials.
+With a focus on streamlining the incorporation of Zero Knowledge Proof (ZKP) technology, NotVault emphasises best practices for encryption, decentralisation, and peer-to-peer operations in all data exchanges.
 
 ## Core Principles
-
 NotVault operates on three fundamental principles:
-
-1. **Peer-to-Peer:** To mitigate any risks associated with a single point of failure.
-2. **Encryption:** To maintain confidentiality at all times.
-3. **Zero Knowledge Proofs:** To minimize data footprints during communication.
+- **Peer-to-Peer**: To mitigate risks associated with a single point of failure.
+- **Encryption**: To maintain confidentiality at all times.
+- Zero Knowledge Proofs: To minimise data footprints during communication.
 
 The functionality of NotVault mirrors that of a wallet, facilitating the private linkage of a contact ID (such as an email) to a user's wallet. Additionally, it generates a new public/private key pair used for data encryption and signing within the ecosystem. This system negates the need to access the keys of the Ethereum wallet (typically inaccessible via API) and provides a more user-friendly method of connecting with other identities.
 
 ## Key Features
-
 Developers leveraging NotVault can access a plethora of features including:
-
-- **Wallet:** Safeguards encrypted keys and metadata.
-- **Credentials:** Facilitates the generation and verification of [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof) credential proofs.
-- **Vault:** Manages confidential token balances and transfers.
-- **Files:** Enables self-sovereign and encrypted file storage capability through [IPFS](https://ipfs.tech).
-- **Commercial Deals:** Supports the lifecycle management of transactional or contractual agreements, inclusive of their financial settlement. It offers self-custody escrows of payment amounts via a peer-to-peer platform.
-- **Service Bus:** Provides a confidential messaging service, ensuring integrity of timestamp, source, and underlying message using a [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof).
-
-Harness the power of NotVault SDK to expedite the development of secure, decentralized applications and services.
+- **Wallet**: Safeguards encrypted keys and metadata.
+- **Credentials**: Facilitates the generation and verification of [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof) credential proofs.
+- **Vault**: Manages confidential token balances and transfers.
+- **Files**: Enables self-sovereign and encrypted file storage capability through [IPFS](https://ipfs.tech).
+- **Commercial Deals**: Supports the lifecycle management of transactional or contractual agreements, including their financial settlement. It offers self-custody escrows of token payment amounts via a peer-to-peer platform.
+- **Service Bus**: Provides a confidential messaging service, ensuring integrity of timestamp, source, and underlying message using a [zkSNARK](https://en.wikipedia.org/wiki/Non-interactive_zero-knowledge_proof).
+Harness the power of **NotVault** SDK to expedite the development of secure, decentralised applications and services.
 
 ----
 
