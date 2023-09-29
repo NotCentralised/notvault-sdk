@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.4.3 (notvault.ts)
+ NotVault SDK for Typescript v0.4.5 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -128,36 +128,26 @@ export class NotVault
 
             contactId = contactId.toLocaleLowerCase().trim();
 
-            let publicKey = await this.confidentialWallet.getPublicKey(address);
+            const _owner = EthCrypto.createIdentity();
+            const ownerPublicKey = await encryptionPublicKeyCallback();
 
-            let privateKey = '';
-            if(publicKey === ''){
-                const _owner = EthCrypto.createIdentity();
-                const ownerPublicKey = await encryptionPublicKeyCallback();
+            const privateKey = _owner.privateKey;
+            const encryptedSecret = ownerPublicKey === '' ? '' : metaMaskEncrypt(ownerPublicKey, secretKey);
+            const encryptedPrivateKey = encryptedBySecret(secretKey, _owner.privateKey);
+            const encryptedContactId = await encrypt(_owner.publicKey, contactId);
+            const hashedContactId = EthCrypto.hash.keccak256(contactId);
 
-                privateKey = _owner.privateKey;
-                const encryptedSecret = ownerPublicKey === '' ? '' : metaMaskEncrypt(ownerPublicKey, secretKey);
-                const encryptedPrivateKey = encryptedBySecret(secretKey, _owner.privateKey);
-                const encryptedContactId = await encrypt(_owner.publicKey, contactId);
-                const hashedContactId = EthCrypto.hash.keccak256(contactId);
-
-                if(hederaList.includes(this.chainId)){
-                    const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId, { gasLimit: BigInt(700_000/*684_397*/) });
-                    await tx.wait();
-                }
-                else{
-                    const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId);
-                    await tx.wait();
-                }
-                
-                publicKey = _owner.publicKey;
+            if(hederaList.includes(this.chainId)){
+                const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId, { gasLimit: BigInt(700_000/*684_397*/) });
+                await tx.wait();
             }
-
-            const encryptedPrivateKey= await this.confidentialWallet.getEncryptedPrivateKey(address);
-
-            if(privateKey === '')
-                privateKey = await metaMaskDecrypt(address, encryptedPrivateKey, decryptCallback);
-
+            else{
+                const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId);
+                await tx.wait();
+            }
+            
+            const publicKey = _owner.publicKey;
+        
             this.address = address;
             this.publicKey = publicKey;
             this.privateKey = privateKey;

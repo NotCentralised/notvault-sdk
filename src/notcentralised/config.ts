@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.4.3 (config.ts)
+ Config SDK for Typescript v0.4.5 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -95,6 +95,13 @@ export const contractsTable : Record<string, any> = {
         dealAddress:     '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
         oracleAddress:   '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
         serviceAddress:  '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82'
+    },
+    '84531': {           // BASE GOERLI
+        walletAddress:   '0xF972E1A76F08c377bF0DB8ed52a231EE99bD0b41',
+        vaultAddress:    '0x9d68228C8E043630041Cf08f911D2EC329390555',
+        dealAddress:     '0xFCC3B351310c2E16035E2126cee14175F5350c91',
+        oracleAddress:   '0xbbf1D9AE5919E25567e17FE0e5187f35F6F562a6',
+        serviceAddress:  '0x24A4d3335f88e59FA672093226D666B1D9CAACAf'
     }
 };
 

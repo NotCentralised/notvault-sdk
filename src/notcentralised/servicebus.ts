@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Service Bus SDK for Typescript v0.4.3 (servicebus.ts)
+ Service Bus SDK for Typescript v0.4.5 (servicebus.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -26,19 +26,34 @@ export class ServiceBus
         this.vault = vault;
     }
 
-    setValue = async (key: BigInt, value: BigInt) : Promise<void> =>  {
+    setValue = async (key: BigInt, value: BigInt) : Promise<{ value: string, hash: string }> =>  {
         if(!(this.vault.confidentialServiceBus && this.vault.chainId))
             throw new Error('Vault is not initialised');
 
         const proof = await genProof(this.vault, 'approver', { key: key, value: value});
-
+        const value_hash = proof.inputs[0];
+        
         if(hederaList.includes(this.vault.chainId)){
             const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs, { gasLimit: BigInt(300_000/*291_582*/) });
             await tx.wait();
+
+            const tx_hash = tx.hash;
+
+            return {
+                value: value_hash,
+                hash: tx_hash
+            };
         }
         else{
             const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs);
             await tx.wait();
+
+            const tx_hash = tx.hash;
+
+            return {
+                value: value_hash,
+                hash: tx_hash
+            };
         }
     }
 
