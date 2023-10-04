@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.4.5 (config.ts)
+ Config SDK for Typescript v0.4.6 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -106,7 +106,7 @@ export const contractsTable : Record<string, any> = {
 };
 
 export const getConfig = (
-    chainId: string, 
+    chainId?: string, 
     proofBase?: string, 
     customTable?: any, 
     custom_axios?: {
@@ -118,7 +118,7 @@ export const getConfig = (
         const ipfs_gateway_url= `https://api.pinata.cloud/pinning/`;
 
         return {
-            contracts: customTable ?? contractsTable[chainId],
+            contracts: chainId ? customTable ?? contractsTable[chainId] : undefined,
             proofs: Object.assign(
                 {}, ...[
                 { key: 'receiver', value: 'HashReceiver' }, 

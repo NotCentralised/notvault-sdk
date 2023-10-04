@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Documents SDK for Typescript v0.4.5 (credentials.ts)
+ Documents SDK for Typescript v0.4.6 (credentials.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -130,7 +130,7 @@ export class Credentials
     issue = async (rawData: any, schema: Schema, owner?: string, source?: string, Add?: boolean): Promise<Credential> => {
         
         const wallet = this.vault.getWalletData();
-        if(!(wallet.publicKey && this.vault.confidentialWallet))
+        if(!wallet.publicKey)
             throw new Error('Vault is not initialised');
 
         const encodedDocument = this.encodeData(rawData, schema);
@@ -165,7 +165,7 @@ export class Credentials
             source: source || signed.signature
         };
 
-        if(Add === true){
+        if(Add === true && this.vault.confidentialWallet){
             await this.vault.confidentialWallet.setCredentialStatus(hash, true);
             await this.add(JSON.stringify({ owner: initialOwnerReference, id: issuedCredential.id, type: schema.id }), JSON.stringify(issuedCredential));
         }

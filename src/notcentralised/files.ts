@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Files SDK for Typescript v0.4.5 (files.ts)
+ Files SDK for Typescript v0.4.6 (files.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

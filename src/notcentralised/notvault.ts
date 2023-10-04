@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.4.5 (notvault.ts)
+ NotVault SDK for Typescript v0.4.6 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -48,19 +48,18 @@ export class NotVault
 
     constructor() { }
     
-    init = (chainId: string, signer: Signer, config?: Config) => {
+    init = (chainId?: string, signer?: Signer, config?: Config) => {
         this.signer = signer;
         
-
         this.chainId = chainId;
 
         if(config){
             this.config = config;
-            this.confidentialWallet = new Contract(this.config.contracts.walletAddress, ConfidentialWallet.abi, signer);
-            this.confidentialVault = new Contract(this.config.contracts.vaultAddress, ConfidentialVault.abi, signer);
-            this.confidentialDeal = new Contract(this.config.contracts.dealAddress, ConfidentialDeal.abi, signer);
-            this.confidentialOracle = new Contract(this.config.contracts.oracleAddress, ConfidentialOracle.abi, signer);
-            this.confidentialServiceBus = new Contract(this.config.contracts.serviceAddress, ConfidentialServiceBus.abi, signer);
+            this.confidentialWallet = chainId ? new Contract(this.config.contracts.walletAddress, ConfidentialWallet.abi, signer) : undefined;
+            this.confidentialVault = chainId ? new Contract(this.config.contracts.vaultAddress, ConfidentialVault.abi, signer) : undefined;
+            this.confidentialDeal = chainId ? new Contract(this.config.contracts.dealAddress, ConfidentialDeal.abi, signer) : undefined;
+            this.confidentialOracle = chainId ? new Contract(this.config.contracts.oracleAddress, ConfidentialOracle.abi, signer) : undefined;
+            this.confidentialServiceBus = chainId ? new Contract(this.config.contracts.serviceAddress, ConfidentialServiceBus.abi, signer) : undefined;
         }
         else{
             this.config = getConfig(chainId)
@@ -120,10 +119,9 @@ export class NotVault
             contactId: string, 
             secretKey: string,
             encryptionPublicKeyCallback: () => Promise<string>,
-            decryptCallback: (encryptedSecret: string) => Promise<string>,
             successCallback: (publicKey: string, contactId: string) => Promise<void>,
         ) => {
-            if(!(this.confidentialWallet && this.chainId))
+            if(!(this.confidentialWallet))
                 throw new Error('Vault is not initialised');
 
             contactId = contactId.toLocaleLowerCase().trim();
@@ -137,7 +135,7 @@ export class NotVault
             const encryptedContactId = await encrypt(_owner.publicKey, contactId);
             const hashedContactId = EthCrypto.hash.keccak256(contactId);
 
-            if(hederaList.includes(this.chainId)){
+            if(this.chainId && hederaList.includes(this.chainId)){
                 const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId, { gasLimit: BigInt(700_000/*684_397*/) });
                 await tx.wait();
             }
@@ -145,7 +143,7 @@ export class NotVault
                 const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId);
                 await tx.wait();
             }
-            
+                    
             const publicKey = _owner.publicKey;
         
             this.address = address;
@@ -177,6 +175,18 @@ export class NotVault
 
             await successCallback(publicKey, contactId);
     }
+
+    enterData = async (
+        address: string,
+        privateKey: string,
+        contactId: string,
+    ) => {
+        
+        this.address = address;
+        this.publicKey = EthCrypto.publicKeyByPrivateKey(privateKey);
+        this.privateKey = privateKey;
+        this.contactId = contactId;
+}
 
     getWalletData = () => { 
         return {
