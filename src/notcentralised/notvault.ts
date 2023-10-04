@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.4.6 (notvault.ts)
+ NotVault SDK for Typescript v0.4.7 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -51,7 +51,7 @@ export class NotVault
     init = (chainId?: string, signer?: Signer, config?: Config) => {
         this.signer = signer;
         
-        this.chainId = chainId;
+        this.chainId = !isNaN(+Number(chainId)) ? chainId : undefined;
 
         if(config){
             this.config = config;
