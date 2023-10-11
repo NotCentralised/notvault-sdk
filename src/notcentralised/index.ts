@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.4.7 (index.ts)
+ NotVault SDK for Typescript v0.5.3 (index.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -16,7 +16,7 @@
 export { NotVault }  from './notvault';
 export { Tokens, SendRequest, Balance, zeroAddress } from './tokens';
 export { Deals } from './deals';
-export { Credentials, Credential, Schema, Proof } from './credentials';
+export { Credentials, Credential, Schema, Proof, flattenObject, unflattenObject } from './credentials';
 export { Files, FileEntry } from './files';
 export { ServiceBus } from './servicebus';
 export * from './config';

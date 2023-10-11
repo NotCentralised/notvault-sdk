@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Proof SDK for Typescript v0.4.7 (proof.ts)
+ Proof SDK for Typescript v0.5.3 (proof.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -14,6 +14,7 @@
 */
 import { NotVault } from './notvault';
 const snarkjs = require("snarkjs");
+const fs = require('fs').promises;
 
 interface IIndexable {
     [key: string]: any;
@@ -59,9 +60,16 @@ const makeProof = async (_proofInput: any, _wasm: string, _zkey: string) : Promi
 // eslint-disable-next-line
 const verProof = async (_verificationkey: string, signals: any, proof: any) => {
 
-    const vkey = await fetch(_verificationkey).then(function (res) {
-        return res.json();
-    });
+    let vkey = {}
+
+    try{
+        vkey = await fetch(_verificationkey).then(function (res) {
+            return res.json();
+        });
+    }
+    catch {
+        vkey = JSON.parse(await fs.readFile(_verificationkey, 'utf-8'));
+    }
 
     const res = await snarkjs.groth16.verify(vkey, signals, proof);
     return res;
