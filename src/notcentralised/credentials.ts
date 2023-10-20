@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Documents SDK for Typescript v0.5.3 (credentials.ts)
+ Documents SDK for Typescript v0.5.5 (credentials.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -46,7 +46,7 @@ export type EncodedData = {
 
 export type Credential = {
     schema: Schema,
-    confidential: {
+    confidential?: {
         issuer: string;
         owner: string;
     };
@@ -80,10 +80,6 @@ export class Credentials
         if(schema.data)
             _schema = schema.data;
       
-        const wallet = this.vault.getWalletData();
-        if(!wallet.publicKey)
-            throw new Error('Vault is not initialised');
-
         const encodedDocument = encodeData(dateObject, _schema);
 
         let initialOwnerReference = owner ? owner.toLowerCase().trim() : '';
@@ -102,11 +98,22 @@ export class Credentials
 
         const hash =  proof.inputs[0];
 
+        const wallet = this.vault.getWalletData();
+
         const signed = await this.vault.sign(source ? (hash + source) : hash);
-        const issuerPrivateMessage = await encrypt(wallet.publicKey, dateObject);
+        const issuerPrivateMessage = wallet.publicKey ? await encrypt(wallet.publicKey, dateObject) : '';
         const ownerPrivateMessage = owner ? await encrypt(owner, dateObject) : '';
 
-        const issuedCredential = {
+        const issuedCredential = (wallet.publicKey === undefined || wallet.publicKey === null) && (owner === undefined || owner === null) ? {
+            schema: _schema,
+            confidential: {
+                issuer: issuerPrivateMessage,
+                owner: ownerPrivateMessage
+            },
+            id: signed.signature,
+            hash: hash,
+            source: source || signed.signature
+        } : {
             schema: _schema,
             confidential: {
                 issuer: issuerPrivateMessage,
@@ -423,7 +430,7 @@ const chunkString = (input: string, maxLength: number = 31): string[] => {
     return result;
 }
 
-export const unflattenObject = (flatObj: Record<string, any>): any => {
+export const unflattenObject = (flatObj: Record<string, any>):  Record<string, any> => {
     const result: any = {};
 
     const assignValue = (obj: any, keys: string[], value: any) => {
@@ -459,6 +466,9 @@ export const unflattenObject = (flatObj: Record<string, any>): any => {
 export const flattenObject = (obj: Record<string, any>, queryFlag: boolean) => {
     
     const type = obj === null ? null : Array.isArray(obj) ? 'array' : typeof obj;
+
+    if(obj === null || obj === undefined)
+        return obj;
 
     if(type === 'string' || type === 'number' || type === 'boolean')
         return obj;
@@ -595,7 +605,7 @@ const getObject = (rawData: Record<string, any>, schemaMeta: {id: string, type: 
             return {
                 id: x,
                 name: x,
-                type: type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
+                type: type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x]))&& isFinite(Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
             }
         })
     };
@@ -603,9 +613,9 @@ const getObject = (rawData: Record<string, any>, schemaMeta: {id: string, type: 
     let dateObject : Record<string, any> = {};
     Object.keys(flatObj).map(x => {
         let type = x === null ? null : Array.isArray(x) ? 'array' : typeof flatObj[x];
-        type = type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
+        type = type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x])) && isFinite(Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
 
-        dateObject[x] = type === "date" ? new Date(Date.parse(flatObj[x])).toISOString() : type === "number" ? Number(flatObj[x]) : flatObj[x];
+        dateObject[x] = type === "date" ? new Date(Date.parse(flatObj[x])).toISOString() : type === "number" && isFinite(Number(flatObj[x])) ? Number(flatObj[x]) : flatObj[x];
     })
     
     const constraints : Record<string, any> = {};
