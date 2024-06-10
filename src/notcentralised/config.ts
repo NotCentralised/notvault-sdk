@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.5.5 (config.ts)
+ Config SDK for Typescript v0.6.0 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -90,11 +90,11 @@ export const contractsTable : Record<string, any> = {
         serviceAddress:  '0xCe011732b409bA13329Be37a36b1E129aeAbfac5'
     },
     '31337': {           // LOCALHOST
-        walletAddress:   '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6',
-        vaultAddress:    '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
-        dealAddress:     '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
-        oracleAddress:   '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
-        serviceAddress:  '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82'
+        walletAddress:   '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318',
+        vaultAddress:    '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
+        dealAddress:     '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
+        oracleAddress:   '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
+        serviceAddress:  '0x9A676e781A523b5d0C0e43731313A708CB607508'
     },
     '84531': {           // BASE GOERLI
         walletAddress:   '0xF972E1A76F08c377bF0DB8ed52a231EE99bD0b41',

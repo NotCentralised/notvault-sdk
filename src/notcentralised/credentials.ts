@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Documents SDK for Typescript v0.5.5 (credentials.ts)
+ Documents SDK for Typescript v0.6.0 (credentials.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -125,7 +125,7 @@ export class Credentials
         };
 
         if(chainMeta?.write === true && this.vault.confidentialWallet){
-            await this.vault.confidentialWallet.setCredentialStatus(hash, true);
+            this.vault.db ? await this.vault.db.setCredentialStatus(hash, true) : await this.vault.confidentialWallet.setCredentialStatus(hash, true);
             await this.add(JSON.stringify({ owner: initialOwnerReference, id: issuedCredential.id, type: _schema.id }), JSON.stringify(issuedCredential));
         }
         

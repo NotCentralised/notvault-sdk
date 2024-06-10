@@ -83,6 +83,38 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_fromTokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_toTokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "BatchMetadataUpdate",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "MetadataUpdate",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "internalType": "address",
           "name": "previousOwner",
@@ -248,6 +280,19 @@
           "type": "uint256"
         }
       ],
+      "name": "cancel",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
       "name": "getApproved",
       "outputs": [
         {
@@ -287,13 +332,23 @@
               "type": "uint256"
             },
             {
-              "internalType": "bool",
-              "name": "accepted",
-              "type": "bool"
+              "internalType": "uint256",
+              "name": "cancelledOwner",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cancelledCounterpart",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
               "name": "acceptedTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "expiryTime",
               "type": "uint256"
             }
           ],
@@ -333,13 +388,23 @@
               "type": "uint256"
             },
             {
-              "internalType": "bool",
-              "name": "accepted",
-              "type": "bool"
+              "internalType": "uint256",
+              "name": "cancelledOwner",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cancelledCounterpart",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
               "name": "acceptedTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "expiryTime",
               "type": "uint256"
             }
           ],
@@ -389,16 +454,6 @@
               "type": "uint256"
             },
             {
-              "internalType": "string",
-              "name": "private_sender_amount",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "private_receiver_amount",
-              "type": "string"
-            },
-            {
               "internalType": "uint256",
               "name": "created",
               "type": "uint256"
@@ -435,12 +490,22 @@
             },
             {
               "internalType": "uint256",
-              "name": "oracle_key",
+              "name": "oracle_key_sender",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "oracle_value",
+              "name": "oracle_value_sender",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_key_recipient",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_value_recipient",
               "type": "uint256"
             },
             {
@@ -579,6 +644,11 @@
           "internalType": "string",
           "name": "uri",
           "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "expiry",
+          "type": "uint256"
         }
       ],
       "name": "safeMint",

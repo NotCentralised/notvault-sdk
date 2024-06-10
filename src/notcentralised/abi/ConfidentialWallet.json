@@ -192,6 +192,69 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "index",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "privateAmountOf",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "denomination",
+          "type": "address"
+        }
+      ],
+      "name": "privateBalanceOf",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "string",
           "name": "publicKey",
           "type": "string"
@@ -262,6 +325,57 @@
         }
       ],
       "name": "setFileIndex",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "value",
+          "type": "string"
+        }
+      ],
+      "name": "setPrivateAmount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "denomination",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "value",
+          "type": "string"
+        }
+      ],
+      "name": "setPrivateBalance",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

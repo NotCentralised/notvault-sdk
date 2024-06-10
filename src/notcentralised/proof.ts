@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Proof SDK for Typescript v0.5.5 (proof.ts)
+ Proof SDK for Typescript v0.6.0 (proof.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -43,13 +43,6 @@ export const verifyProof = async (vault: NotVault, name: string, proof: any) => 
     const createZkey = (vault.config.proofs as IIndexable)[name].vkey;
 
     return await verProof(createZkey, proof.inputs, proof.proof);
-    // const { proof, publicSignals } = await verProof(input, createWasm, createZkey)
-
-    // const solidityProof = proofToSolidityInput(proof);
-    // return {
-    //     solidityProof: solidityProof,
-    //     inputs: publicSignals,
-    // }
 }
 
 const makeProof = async (_proofInput: any, _wasm: string, _zkey: string) : Promise<{ proof: string, publicSignals: string[]}> => {

@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.5.5 (notvault.ts)
+ NotVault SDK for Typescript v0.6.0 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -13,7 +13,7 @@
  Author: @NumbersDeFi 
 */
 
-import { Contract, Signer } from 'ethers';
+import { Contract, Signer, PopulatedTransaction, utils, providers } from 'ethers';
 
 import * as EthCrypto from "eth-crypto";
 
@@ -34,6 +34,37 @@ import { metaMaskEncrypt, metaMaskDecrypt, decrypt, encrypt, encryptedBySecret, 
 
 export const hederaList = ['295', '296', '297', '298']
 
+export type WalletDB = {
+    // layerc.privatebalances
+    privateBalanceOf: (vaultAddress: string, walletAddress: string, denomination: string) => Promise<string>
+    setPrivateBalance: (address: string, vaultAddress: string, denomination: string, amount: string) => Promise<void>
+    
+    // layerc.privateamounts
+    privateAmountOf: (senderAddress: string, vaultAddress?: string, walletAddress?: string, idHash?: string | bigint) => Promise<string>
+    setPrivateAmount: (address: string, vaultAddress?: string, walletAddress?: string, idHash?: string, amount?: string) => Promise<void>
+    
+    getAddressByContactId: (id : string) => Promise<string>
+    getPublicKey: (address: string) => Promise<string>
+
+    registerKeys: (publicKey: string, encryptedPrivateKey: string, encryptedSecret: string, hashedContactId: string, encryptedContactId: string) => Promise<string>
+    getEncryptedPrivateKey: (address: string) => Promise<string>
+    getEncryptedContactId: (addres: string) => Promise<string>
+
+    // layerc.valuedb
+    getValue: (address: string, key: string) => Promise<string>
+    setValue: (address: string, key: string, value: string) => Promise<void>
+    
+    // layerc.filedb
+    getFileIndex: (address: string) => Promise<string>
+    setFileIndex: (address: string, value: string) => Promise<void>
+    
+    // layerc.credentialdb
+    getCredentialIndex: (address: string) => Promise<string>
+    setCredentialIndex: (address: string, value: string) => Promise<void>
+
+    setCredentialStatus: (hash: string, bool: any) => Promise<void>
+}
+
 export class NotVault
 {
     confidentialWallet?: Contract;
@@ -46,7 +77,9 @@ export class NotVault
     config?: Config;
     chainId?: string;
 
-    constructor() { }
+    db?: WalletDB;
+
+    constructor(db?: WalletDB) { this.db = db; }
     
     init = (chainId?: string, signer?: Signer, config?: Config) => {
         this.signer = signer;
@@ -136,11 +169,11 @@ export class NotVault
             const hashedContactId = EthCrypto.hash.keccak256(contactId);
 
             if(this.chainId && hederaList.includes(this.chainId)){
-                const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId, { gasLimit: BigInt(700_000/*684_397*/) });
+                const tx = this.db ? await this.db.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId) : await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId, { gasLimit: BigInt(700_000/*684_397*/) });
                 await tx.wait();
             }
             else{
-                const tx = await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId);
+                const tx = this.db ? await this.db.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId) : await this.confidentialWallet.registerKeys(EthCrypto.publicKeyByPrivateKey(_owner.privateKey), encryptedPrivateKey, encryptedSecret, hashedContactId, encryptedContactId);
                 await tx.wait();
             }
                     
@@ -161,9 +194,9 @@ export class NotVault
         ) => {
             if(!this.confidentialWallet)
                 throw new Error('Vault is not initialised');
-            const publicKey = await this.confidentialWallet.getPublicKey(address);
-            const encryptedPrivateKey= await this.confidentialWallet.getEncryptedPrivateKey(address);
-            const encryptedContactId= await this.confidentialWallet.getEncryptedContactId(address);
+            const publicKey = this.db ? await this.db.getPublicKey(address) : await this.confidentialWallet.getPublicKey(address);
+            const encryptedPrivateKey= this.db ? await this.db.getEncryptedPrivateKey(address) : await this.confidentialWallet.getEncryptedPrivateKey(address);
+            const encryptedContactId= this.db ? await this.db.getEncryptedContactId(address) : await this.confidentialWallet.getEncryptedContactId(address);
 
             const privateKey = await decryptBySecret(secretKey, encryptedPrivateKey);
             const contactId = await decrypt(privateKey, encryptedContactId);
@@ -221,7 +254,7 @@ export class NotVault
         if(!(this.address && this.confidentialWallet))
             throw new Error('Vault is not initialised');
 
-        return await this.confidentialWallet.getValue(this.address, key);
+        return this.db ? await this.db.getValue(this.address, key) : await this.confidentialWallet.getValue(this.address, key);
     }
 
     setValue = async (key: string, value: string) : Promise<void> => {
@@ -229,20 +262,62 @@ export class NotVault
             throw new Error('Vault is not initialised');
 
         if(hederaList.includes(this.chainId)){
-            const tx = await this.confidentialWallet.setValue(key, value, { gasLimit: BigInt(200_000/*137_643*/) });
-            await tx.wait();    
+            const tx = this.db ? await this.db.setValue(this.address, key, value) : await this.confidentialWallet.setValue(key, value, { gasLimit: BigInt(200_000/*137_643*/) });
+            if(tx.wait)
+                await tx.wait();    
         }
         else{
-            const tx = await this.confidentialWallet.setValue(key, value);
-            await tx.wait();
+            const tx = this.db ? await this.db.setValue(this.address, key, value) : await this.confidentialWallet.setValue(key, value);
+            if(tx.wait)
+                await tx.wait();
         }
     }
+
+    setValueTx = async (key: string, value: string) : Promise<PopulatedTransaction> => {
+        if(!(this.address && this.confidentialWallet && this.chainId))
+            throw new Error('Vault is not initialised');
+
+        const tx = await this.confidentialWallet.populateTransaction.setValue(key, value);
+        return tx;
+    }
+
+    _setValue = async (key: string, value: string) : Promise<void> => {
+        const tx = await this.setValueTx(key, value);
+        const stx = await this.signTx(tx);
+        await this.sendTx(stx, this.signer?.provider);
+    }
+
+    signTx = async (tx: PopulatedTransaction) => {
+        if(!this.signer)
+            throw new Error("No Signer");
+
+        const signedTx = await this.signer.signTransaction({
+            to: tx.to,
+            data: tx.data,
+            gasLimit: utils.hexlify(await this.signer.estimateGas(tx)), // Estimate or set the gas limit
+            gasPrice: await this.signer.getGasPrice(), // Get current gas price
+            nonce: await this.signer.getTransactionCount(), // Get the nonce for the owner,
+            chainId: await this.signer.getChainId()
+        });
+
+        return signedTx;
+    }
+
+    sendTx = async (stx: string, provider?: providers.Provider) => {
+        const tx = await (provider ?? this.signer?.provider)?.sendTransaction(stx);
+        await tx?.wait();
+        return tx;
+    }
+
+    
+
+    
 
     getFileIndex = async () : Promise<string> => {
         if(!(this.address && this.confidentialWallet))
             throw new Error('Vault is not initialised');
 
-        return await this.confidentialWallet.getFileIndex(this.address);
+        return this.db ? await this.db.getFileIndex(this.address) : await this.confidentialWallet.getFileIndex(this.address);
     }
 
     setFileIndex = async (value: string) : Promise<void> => {
@@ -250,20 +325,30 @@ export class NotVault
             throw new Error('Vault is not initialised');
         
         if(hederaList.includes(this.chainId)){
-            const tx = await this.confidentialWallet.setFileIndex(value, { gasLimit: BigInt(100_000/*90_313*/) });
-            await tx.wait();    
+            const tx = this.db ? await this.db.setFileIndex(this.address, value) : await this.confidentialWallet.setFileIndex(value, { gasLimit: BigInt(100_000/*90_313*/) });
+            if(tx.wait)
+                await tx.wait();    
         }
         else{
-            const tx = await this.confidentialWallet.setFileIndex(value);
-            await tx.wait();
+            const tx = this.db ? await this.db.setFileIndex(this.address, value) : await this.confidentialWallet.setFileIndex(value);
+            if(tx.wait)
+                await tx.wait();
         }
+    }
+
+    setFileIndexTx = async (value: string) : Promise<PopulatedTransaction> => {
+        if(!(this.address && this.confidentialWallet && this.chainId))
+            throw new Error('Vault is not initialised');
+
+        const tx = await this.confidentialWallet.populateTransaction.setFileIndex(value);
+        return tx;
     }
 
     getCredentialIndex = async () : Promise<string> => {
         if(!(this.address && this.confidentialWallet))
             throw new Error('Vault is not initialised');
 
-        return await this.confidentialWallet.getCredentialIndex(this.address);
+        return this.db ? await this.db.getCredentialIndex(this.address) : await this.confidentialWallet.getCredentialIndex(this.address);
     }
 
     setCredentialIndex = async (value: string) : Promise<void> => {
@@ -271,13 +356,23 @@ export class NotVault
             throw new Error('Vault is not initialised');
         
         if(hederaList.includes(this.chainId)){
-            const tx = await this.confidentialWallet.setCredentialIndex(value, { gasLimit: BigInt(100_000/*90_313*/) });
-            await tx.wait();    
+            const tx = this.db ? await this.db.setCredentialIndex(this.address, value) : await this.confidentialWallet.setCredentialIndex(value, { gasLimit: BigInt(100_000/*90_313*/) });
+            if(tx.wait)
+                await tx.wait();    
         }
         else{
-            const tx = await this.confidentialWallet.setCredentialIndex(value);
-            await tx.wait();
+            const tx = this.db ? await this.db.setCredentialIndex(this.address, value) : await this.confidentialWallet.setCredentialIndex(value);
+            if(tx.wait)
+                await tx.wait();
         }
+    }
+
+    setCredentialIndexTx = async (value: string) : Promise<PopulatedTransaction> => {
+        if(!(this.address && this.confidentialWallet && this.chainId))
+            throw new Error('Vault is not initialised');
+
+        const tx = await this.confidentialWallet.populateTransaction.setCredentialIndex(value);
+        return tx;
     }
 
     getPublicKeyByContactId = async (owner: string) => {
@@ -285,10 +380,10 @@ export class NotVault
             throw new Error('Vault is not initialised');
         
         const hashContactId = EthCrypto.hash.keccak256(owner.toLowerCase().trim());
-        let destinationAddress = await this.confidentialWallet.getAddressByContactId(hashContactId);
+        let destinationAddress = this.db ? await this.db.getAddressByContactId(hashContactId) : await this.confidentialWallet.getAddressByContactId(hashContactId);
         if(destinationAddress === zeroAddress)
             destinationAddress = owner;
 
-        return await this.confidentialWallet.getPublicKey(destinationAddress);
+        return this.db ? await this.db.getPublicKey(destinationAddress) : await this.confidentialWallet.getPublicKey(destinationAddress);
     }
 }

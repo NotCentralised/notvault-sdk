@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.5.5 (deals.ts)
+ Deals SDK for Typescript v0.6.0 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -16,10 +16,12 @@
 import { decryptBySecret, encrypt, encryptedBySecret  } from './encryption';
 import { Files } from './files';
 
+import { PopulatedTransaction } from 'ethers';
+
 import * as EthCrypto from "eth-crypto";
 
 import { Tokens, SendRequest, zeroAddress } from './tokens';
-import { NotVault, hederaList } from './notvault';
+import { NotVault, WalletDB, hederaList } from './notvault';
 import { genProof } from './proof';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -51,10 +53,9 @@ export type Deal = {
 
     unlock_sender: number,
     unlock_receiver: number,
-    acceptedTime: number,
-    createdTime: number,
-    total_locked: bigint,
-    accepted: boolean
+    accepted: number,
+    created: number,
+    total_locked: bigint
 }
 
 export type DealPackege = {
@@ -74,9 +75,15 @@ export type DealPackege = {
     },
     oracle_address: string,
     oracle_owner: string,
-    oracle_key: string | number,
-    oracle_value: string | number,
-    oracle_value_secret: string | number,
+
+    oracle_key_sender: string | number,
+    oracle_value_sender: string | number,
+    oracle_value_sender_secret: string | number,
+
+    oracle_key_recipient: string | number,
+    oracle_value_recipient: string | number,
+    oracle_value_recipient_secret: string | number,
+
     unlock_sender: number,
     unlock_receiver: number
 }
@@ -86,11 +93,11 @@ export class Deals
     vault: NotVault
     tokens: Tokens;
     files: Files;
-
+    
     constructor(vault: NotVault, tokens: Tokens, files: Files){
         this.vault = vault;
         this.tokens = tokens;
-        this.files = files;
+        this.files = files;    
     }
 
     getAssets = async () : Promise<Deal[]> => {
@@ -101,12 +108,13 @@ export class Deals
         if(!this.vault.confidentialDeal)
             throw new Error('Vault is not initialised');
 
-        const _deals: { tokenId: string, tokenUri:string, accepted:boolean, acceptedTime:number, createdTime:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
+        const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
+
         if(_deals.length === 0)
             return [];
 
         return Promise.all(_deals
-            .map((x:any) => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'acceptedTime': x.acceptedTime, 'createdTime': x.createdTime } })
+            .map((x:any) => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry } })
             .map(async (x, i) => {
                 if(!this.vault.confidentialDeal)
                     throw new Error('Vault is not initialised');
@@ -121,7 +129,8 @@ export class Deals
                 const payments: SendRequest[] = await this.vault.confidentialDeal.getSendRequestByDeal(tokenId);
                 
                 const total_locked = (await Promise.all(payments.filter(x=>x.active).map(async element => {
-                    return BigInt(await this.vault.decrypt(element.private_receiver_amount));
+                    const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(element.sender, this.vault.confidentialVault?.address, this.vault.getWalletData().address, element.idHash) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, this.vault.getWalletData().address, element.idHash);
+                    return BigInt(await this.vault.decrypt(privateAmount));
                 }))).reduce((acc, val) => BigInt(acc) + BigInt(val), BigInt(0));
 
                 // eslint-disable-next-line
@@ -140,6 +149,8 @@ export class Deals
                     files: d.files,
                     payments: payments,
 
+                    expiry: Number(x.expiry),
+
                     oracle_address: d.oracle_address,
                     oracle_owner: d.oracle_owner,
                     oracle_key: d.oracle_key,
@@ -148,10 +159,9 @@ export class Deals
 
                     unlock_sender: Number(d.unlock_sender),
                     unlock_receiver: Number(d.unlock_receiver),
-                    acceptedTime: Number(x.acceptedTime),
-                    createdTime: Number(x.createdTime),
-                    total_locked: BigInt(total_locked) / decimals,
-                    accepted: x.accepted
+                    accepted: Number(x.accepted),
+                    created: Number(x.created),
+                    total_locked: BigInt(total_locked) / decimals
                 }})
         );
     }
@@ -164,19 +174,22 @@ export class Deals
         if(!this.vault.confidentialDeal)
             throw new Error('Vault is not initialised');
 
-        const _deals: { tokenId: string, tokenUri:string, accepted:boolean, acceptedTime:number, createdTime:number }[] = await this.vault.confidentialDeal.getDealByCounterpart(walletData.address);
+        const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number }[] = await this.vault.confidentialDeal.getDealByCounterpart(walletData.address);
 
         if(_deals.length === 0)
             return [];
 
         return Promise.all(_deals
-            .map(x => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'acceptedTime': x.acceptedTime, 'createdTime': x.createdTime } })
+            .map(x => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry } })
             .map(async (x, i) => {
                 if(!walletData.address)
                     throw new Error('Vault is not initialised');
 
                 if(!this.vault.confidentialDeal)
                     throw new Error('Vault is not initialised');
+
+                if(!this.vault.confidentialWallet)
+                    throw new Error('Wallet is not initialised');
         
                 const files = await this.files.get(x.tokenUri);
                 const decryptedSecret = await this.vault.decrypt(files.counterpart);
@@ -187,7 +200,8 @@ export class Deals
                 const payments: SendRequest[] = await this.vault.confidentialDeal.getSendRequestByDeal(tokenId);
                 
                 const total_locked = (await Promise.all(payments.filter(x=>x.active).map(async element => {
-                    return BigInt(await this.vault.decrypt(element.private_sender_amount))
+                    const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(element.sender, this.vault.confidentialVault?.address, this.vault.getWalletData().address, element.idHash) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, this.vault.getWalletData().address, element.idHash);
+                    return BigInt(await this.vault.decrypt(privateAmount))
                 }))).reduce((acc, val) => BigInt(acc) + BigInt(val), BigInt(0));
 
                 // eslint-disable-next-line
@@ -212,124 +226,287 @@ export class Deals
                     oracle_value: d.oracle_value,
                     oracle_value_secret: d.oracle_value_secret,
     
+                    expiry: Number(x.expiry),
                     unlock_sender: Number(d.unlock_sender),
                     unlock_receiver: Number(d.unlock_receiver),
-                    acceptedTime: Number(x.acceptedTime),
-                    createdTime: Number(x.createdTime),
-                    total_locked: total_locked / decimals,
-                    accepted: x.accepted
+                    accepted: Number(x.accepted),
+                    created: Number(x.created),
+                    total_locked: total_locked / decimals
                 }})
         );
         
     }
     
     create = async (
-            denominationAddress: string, 
-            oracle_contract_address: string | undefined, 
-            values: { 
-                name: string, 
-                counterpart: string, 
-                description: string, 
-                notional: bigint, 
-                initial: bigint, 
-                unlock_sender: number, 
-                unlock_receiver: number, 
-                oracle_owner: string, 
-                oracle_key: string | number, 
-                oracle_value: string | number
-            }, 
-            files: {
-                data: {
-                    created: number,
-                    data: string,
-                    name: string
-                } []
-            }
-        ) : Promise<string> => {
+        denominationAddress: string, 
+        oracle_contract_address: string | undefined, 
+        values: { 
+            name: string, 
+            counterpart: string, 
+            description: string, 
+            notional: bigint, 
+            initial: bigint, 
+            expiry: number, 
+            unlock_sender: number, 
+            unlock_receiver: number, 
 
-            const walletData = this.vault.getWalletData();
-            if(!(walletData.address && walletData.publicKey && this.vault.confidentialWallet && this.vault.confidentialDeal && this.vault.chainId))
-                throw new Error('Vault is not initialised');
+            oracle_owner: string, 
             
-            const hashContactId = EthCrypto.hash.keccak256(values.counterpart.toLowerCase().trim());
-            let destinationAddress = await this.vault.confidentialWallet.getAddressByContactId(hashContactId);
-            if(destinationAddress === zeroAddress)
-                destinationAddress = values.counterpart;
-        
-            let oracleOwnerAddress = zeroAddress;
-            if(values.oracle_owner){
-                const oracleOwnerId = EthCrypto.hash.keccak256(values.oracle_owner.toLowerCase().trim());
-                oracleOwnerAddress = await this.vault.confidentialWallet.getAddressByContactId(oracleOwnerId);
-                if(oracleOwnerAddress === zeroAddress)
-                    oracleOwnerAddress = values.oracle_owner;
-            }
-        
-            const proof = !values.oracle_key || values.oracle_key === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: values.oracle_key, value: values.oracle_value });
+            oracle_key_sender: string | number, 
+            oracle_value_sender: string | number,
+            oracle_key_recipient: string | number, 
+            oracle_value_recipient: string | number
+        }, 
+        files: {
+            data: {
+                created: number,
+                data: string,
+                name: string
+            } []
+        }
+    ) : Promise<string> => {
 
-            let deal : DealPackege = {
-                owner: walletData.address,
-                counterpart: destinationAddress,
-                denomination: denominationAddress,
-                name: values.name,
-                description: values.description,
-                notional: values.notional,
-                initial: values.initial,
-                files: files,
-                oracle_address: oracle_contract_address ? oracle_contract_address : this.vault.confidentialOracle ? this.vault.confidentialOracle.address.toString() : zeroAddress,
-                oracle_owner: oracleOwnerAddress,
-                oracle_key: proof.inputs[1],
-                oracle_value: proof.inputs[0],
-                oracle_value_secret: values.oracle_value,
-                unlock_sender: values.unlock_sender ? values.unlock_sender : 0,
-                unlock_receiver: values.unlock_receiver ? values.unlock_receiver : 0
-            }
+        const walletData = this.vault.getWalletData();
+        if(!(walletData.address && walletData.publicKey && this.vault.confidentialWallet && this.vault.confidentialDeal && this.vault.chainId))
+            throw new Error('Vault is not initialised');
         
-            let dealPackage = JSON.stringify(deal);
-        
-            const counterPublicKey = await this.vault.confidentialWallet.getPublicKey(destinationAddress);
-        
-            const secret = uuidv4();
-            const encryptedDealBySecret = encryptedBySecret(secret, dealPackage);
-        
-            const ownerEncryptedSecret = await encrypt(walletData.publicKey, secret);
-            const counterEncryptedSecret = await encrypt(counterPublicKey, secret);
-        
-            const encryptedDeal = JSON.stringify({ owner: ownerEncryptedSecret, counterpart: counterEncryptedSecret, deal: encryptedDealBySecret }); 
+        const hashContactId = EthCrypto.hash.keccak256(values.counterpart.toLowerCase().trim());
+        let destinationAddress = this.vault.db ? await this.vault.db.getAddressByContactId(hashContactId) : await this.vault.confidentialWallet.getAddressByContactId(hashContactId);
+        if(destinationAddress === zeroAddress)
+            destinationAddress = values.counterpart;
+    
+        let oracleOwnerAddress = zeroAddress;
+        if(values.oracle_owner){
+            const oracleOwnerId = EthCrypto.hash.keccak256(values.oracle_owner.toLowerCase().trim());
+            oracleOwnerAddress = this.vault.db ? await this.vault.db.getAddressByContactId(oracleOwnerId) : await this.vault.confidentialWallet.getAddressByContactId(oracleOwnerId);
+            if(oracleOwnerAddress === zeroAddress)
+                oracleOwnerAddress = values.oracle_owner;
+        }
+    
+        const proof_sender = !values.oracle_key_sender || values.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: values.oracle_key_sender, value: values.oracle_value_sender });
+        const proof_recipient = !values.oracle_key_recipient || values.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: values.oracle_key_recipient, value: values.oracle_value_recipient });
 
-            const cid = await this.files.set('deal.json', encryptedDeal);
 
-            const b = await this.tokens.getBalance(denominationAddress);
+        let deal : DealPackege = {
+            owner: walletData.address,
+            counterpart: destinationAddress,
+            denomination: denominationAddress,
+            name: values.name,
+            description: values.description,
+            notional: values.notional,
+            initial: values.initial,
+            files: files,
+            oracle_address: oracle_contract_address ? oracle_contract_address : this.vault.confidentialOracle ? this.vault.confidentialOracle.address.toString() : zeroAddress,
+            oracle_owner: oracleOwnerAddress,
 
-            const proofAgree = await genProof(this.vault, 'minCommitment', { amount: BigInt(deal.initial) * BigInt(b.decimals), minAmount: BigInt(deal.initial) * BigInt(b.decimals), oracle_owner: deal.oracle_owner, oracle_key: deal.oracle_key, oracle_value: deal.oracle_value, unlock_sender: deal.unlock_sender, unlock_receiver: deal.unlock_receiver });
+            oracle_key_sender: proof_sender.inputs[1],
+            oracle_value_sender: proof_sender.inputs[0],
+            oracle_value_sender_secret: values.oracle_value_sender,
+
+            oracle_key_recipient: proof_recipient.inputs[1],
+            oracle_value_recipient: proof_recipient.inputs[0],
+            oracle_value_recipient_secret: values.oracle_value_recipient,
+
+            unlock_sender: values.unlock_sender ? values.unlock_sender : 0,
+            unlock_receiver: values.unlock_receiver ? values.unlock_receiver : 0
+        }
+    
+        let dealPackage = JSON.stringify(deal);
+    
+        const counterPublicKey = this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
+    
+        const secret = uuidv4();
+        const encryptedDealBySecret = encryptedBySecret(secret, dealPackage);
+    
+        const ownerEncryptedSecret = await encrypt(walletData.publicKey, secret);
+        const counterEncryptedSecret = await encrypt(counterPublicKey, secret);
+    
+        const encryptedDeal = JSON.stringify({ owner: ownerEncryptedSecret, counterpart: counterEncryptedSecret, deal: encryptedDealBySecret }); 
+
+        const cid = await this.files.set('deal.json', encryptedDeal);
+
+        const b = await this.tokens.getBalance(denominationAddress);
+
+        const proofAgree = await genProof(
+            this.vault, 
+            'minCommitment', 
+            { 
+                amount: BigInt(deal.initial) * BigInt(b.decimals), 
+                minAmount: BigInt(deal.initial) * BigInt(b.decimals), 
+
+                oracle_owner: deal.oracle_owner, 
+                
+                oracle_key_sender: deal.oracle_key_sender, 
+                oracle_value_sender: deal.oracle_value_sender, 
+
+                oracle_key_recipient: deal.oracle_key_recipient, 
+                oracle_value_recipient: deal.oracle_value_recipient, 
+                
+                unlock_sender: deal.unlock_sender, 
+                unlock_receiver: deal.unlock_receiver 
+            });
+    
+        if(hederaList.includes(this.vault.chainId)){
+            const tx = await this.vault.confidentialDeal.safeMint(destinationAddress, proofAgree.inputs[1], proofAgree.inputs[2], cid, values.expiry, { gasLimit: BigInt(325_000/*303_191*/) });
+            await tx.wait();
+        }
+        else{
+            const tx = await this.vault.confidentialDeal.safeMint(destinationAddress, proofAgree.inputs[1], proofAgree.inputs[2], cid, values.expiry);
+            await tx.wait();
+        }
+    
+        return cid;
+    }
+
+    createTx = async (
+        denominationAddress: string, 
+        oracle_contract_address: string | undefined, 
+        values: { 
+            name: string, 
+            counterpart: string, 
+            description: string, 
+            notional: bigint, 
+            initial: bigint, 
+            expiry: number, 
+            unlock_sender: number, 
+            unlock_receiver: number, 
+
+            oracle_owner: string, 
+            
+            oracle_key_sender: string | number, 
+            oracle_value_sender: string | number,
+            oracle_key_recipient: string | number, 
+            oracle_value_recipient: string | number
+        }, 
+        files: {
+            data: {
+                created: number,
+                data: string,
+                name: string
+            } []
+        }
+    ) : Promise<{idHash: string, safeMintTx: PopulatedTransaction}> => {
+
+        const walletData = this.vault.getWalletData();
+        if(!(walletData.address && walletData.publicKey && this.vault.confidentialWallet && this.vault.confidentialDeal && this.vault.chainId))
+            throw new Error('Vault is not initialised');
         
-            if(hederaList.includes(this.vault.chainId)){
-                const tx = await this.vault.confidentialDeal.safeMint(destinationAddress, proofAgree.inputs[1], proofAgree.inputs[2], cid, { gasLimit: BigInt(325_000/*303_191*/) });
-                await tx.wait();
-            }
-            else{
-                const tx = await this.vault.confidentialDeal.safeMint(destinationAddress, proofAgree.inputs[1], proofAgree.inputs[2], cid);
-                await tx.wait();
-            }
+        const hashContactId = EthCrypto.hash.keccak256(values.counterpart.toLowerCase().trim());
+        let destinationAddress = this.vault.db ? await this.vault.db.getAddressByContactId(hashContactId) : await this.vault.confidentialWallet.getAddressByContactId(hashContactId);
+        if(destinationAddress === zeroAddress)
+            destinationAddress = values.counterpart;
+    
+        let oracleOwnerAddress = zeroAddress;
+        if(values.oracle_owner){
+            const oracleOwnerId = EthCrypto.hash.keccak256(values.oracle_owner.toLowerCase().trim());
+            oracleOwnerAddress = this.vault.db ? await this.vault.db.getAddressByContactId(oracleOwnerId) : await this.vault.confidentialWallet.getAddressByContactId(oracleOwnerId);
+            if(oracleOwnerAddress === zeroAddress)
+                oracleOwnerAddress = values.oracle_owner;
+        }
+    
+        const proof_sender = !values.oracle_key_sender || values.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: values.oracle_key_sender, value: values.oracle_value_sender });
+        const proof_recipient = !values.oracle_key_recipient || values.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: values.oracle_key_recipient, value: values.oracle_value_recipient });
+
+
+        let deal : DealPackege = {
+            owner: walletData.address,
+            counterpart: destinationAddress,
+            denomination: denominationAddress,
+            name: values.name,
+            description: values.description,
+            notional: values.notional,
+            initial: values.initial,
+            files: files,
+            oracle_address: oracle_contract_address ? oracle_contract_address : this.vault.confidentialOracle ? this.vault.confidentialOracle.address.toString() : zeroAddress,
+            oracle_owner: oracleOwnerAddress,
+
+            oracle_key_sender: proof_sender.inputs[1],
+            oracle_value_sender: proof_sender.inputs[0],
+            oracle_value_sender_secret: values.oracle_value_sender,
+
+            oracle_key_recipient: proof_recipient.inputs[1],
+            oracle_value_recipient: proof_recipient.inputs[0],
+            oracle_value_recipient_secret: values.oracle_value_recipient,
+
+            unlock_sender: values.unlock_sender ? values.unlock_sender : 0,
+            unlock_receiver: values.unlock_receiver ? values.unlock_receiver : 0
+        }
+    
+        let dealPackage = JSON.stringify(deal);
+    
+        const counterPublicKey = this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
+    
+        const secret = uuidv4();
+        const encryptedDealBySecret = encryptedBySecret(secret, dealPackage);
+    
+        const ownerEncryptedSecret = await encrypt(walletData.publicKey, secret);
+        const counterEncryptedSecret = await encrypt(counterPublicKey, secret);
+    
+        const encryptedDeal = JSON.stringify({ owner: ownerEncryptedSecret, counterpart: counterEncryptedSecret, deal: encryptedDealBySecret }); 
+
+        const cid = await this.files.set('deal.json', encryptedDeal);
+
+        const b = await this.tokens.getBalance(denominationAddress);
+
+        const proofAgree = await genProof(
+            this.vault, 
+            'minCommitment', 
+            { 
+                amount: BigInt(deal.initial) * BigInt(b.decimals), 
+                minAmount: BigInt(deal.initial) * BigInt(b.decimals), 
+
+                oracle_owner: deal.oracle_owner, 
+                
+                oracle_key_sender: deal.oracle_key_sender, 
+                oracle_value_sender: deal.oracle_value_sender, 
+
+                oracle_key_recipient: deal.oracle_key_recipient, 
+                oracle_value_recipient: deal.oracle_value_recipient, 
+                
+                unlock_sender: deal.unlock_sender, 
+                unlock_receiver: deal.unlock_receiver 
+            });
+    
+        const tx = await this.vault.confidentialDeal.populateTransaction.safeMint(destinationAddress, proofAgree.inputs[1], proofAgree.inputs[2], cid, values.expiry);
         
-            return cid;
+        return { idHash: cid, safeMintTx: tx};
     }
 
     accept = async (
             denomination: string, 
             destination: string, 
             amount: bigint, 
-            dealId: BigInt, 
             oracleAddress: string, 
             oracleOwner: string, 
-            oracleKey: number, 
-            oracleValue: number, 
+
+            oracleKeySender: number, 
+            oracleValueSender: number, 
+            oracleKeyRecipient: number, 
+            oracleValueRecipient: number, 
+            
             unlockSender: number, 
-            unlockReceiver:number
+            unlockReceiver:number,
+            dealId: BigInt, 
+            expiry: number
         ) : Promise<string> => {
             if(!(this.vault.confidentialDeal && this.vault.chainId))
                 throw new Error('Vault is not initialised');
 
-            return this.tokens.send(denomination, destination, amount, dealId, oracleAddress, oracleOwner, oracleKey, oracleValue, unlockSender, unlockReceiver);
+            return this.tokens.send(
+                denomination, 
+                destination, 
+                amount, 
+                oracleAddress, 
+                oracleOwner, 
+                
+                oracleKeySender, oracleValueSender, 
+                oracleKeyRecipient, oracleValueRecipient, 
+                
+                unlockSender, unlockReceiver,
+
+                dealId, 
+                expiry
+                );
     }
 
     approve = async (key: string, value: string) : Promise<void> =>  {
