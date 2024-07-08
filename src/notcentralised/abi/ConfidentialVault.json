@@ -14,6 +14,16 @@
           "internalType": "address",
           "name": "_receiveVerifier",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_signatureVerifier",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_accessControl",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -45,6 +55,58 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256[3]",
+          "name": "input",
+          "type": "uint256[3]"
+        }
+      ],
+      "name": "acceptRequestMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "canAccept",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "components": [
             {
               "internalType": "address",
@@ -58,13 +120,8 @@
             },
             {
               "internalType": "address",
-              "name": "deal_address",
+              "name": "obligor",
               "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "deal_id",
-              "type": "uint256"
             },
             {
               "internalType": "address",
@@ -97,39 +154,54 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_sender",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_receiver",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "internalType": "bytes",
-              "name": "proof",
+              "name": "proof_send",
               "type": "bytes"
             },
             {
               "internalType": "uint256[5]",
-              "name": "input",
+              "name": "input_send",
               "type": "uint256[5]"
             },
             {
               "internalType": "bytes",
-              "name": "proof_agree",
+              "name": "proof_signature",
               "type": "bytes"
             },
             {
-              "internalType": "uint256[3]",
-              "name": "input_agree",
-              "type": "uint256[3]"
+              "internalType": "uint256[2]",
+              "name": "input_signature",
+              "type": "uint256[2]"
             }
           ],
           "internalType": "struct CreateRequestMessage[]",
           "name": "cr",
           "type": "tuple[]"
+        },
+        {
+          "internalType": "address",
+          "name": "deal_address",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deal_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "agree",
+          "type": "bool"
         }
       ],
       "name": "createRequest",
@@ -141,7 +213,122 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "denomination",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "obligor",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "oracle_address",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "oracle_owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_key_sender",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_value_sender",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_key_recipient",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oracle_value_recipient",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint32",
+              "name": "unlock_sender",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "unlock_receiver",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof_send",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[5]",
+              "name": "input_send",
+              "type": "uint256[5]"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof_signature",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[2]",
+              "name": "input_signature",
+              "type": "uint256[2]"
+            }
+          ],
+          "internalType": "struct CreateRequestMessage[]",
+          "name": "cr",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "address",
+          "name": "deal_address",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deal_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "agree",
+          "type": "bool"
+        }
+      ],
+      "name": "createRequestMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "denomination",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "obligor",
           "type": "address"
         },
         {
@@ -161,6 +348,44 @@
         }
       ],
       "name": "deposit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "denomination",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "obligor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256[3]",
+          "name": "input",
+          "type": "uint256[3]"
+        }
+      ],
+      "name": "depositMeta",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -227,19 +452,24 @@
               "type": "address"
             },
             {
+              "internalType": "address",
+              "name": "obligor",
+              "type": "address"
+            },
+            {
               "internalType": "uint256",
               "name": "amount_hash",
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "created",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "redeemed",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "internalType": "bool",
@@ -287,14 +517,14 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_sender",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_receiver",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "internalType": "struct SendRequest[]",
@@ -338,19 +568,24 @@
               "type": "address"
             },
             {
+              "internalType": "address",
+              "name": "obligor",
+              "type": "address"
+            },
+            {
               "internalType": "uint256",
               "name": "amount_hash",
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "created",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "redeemed",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "internalType": "bool",
@@ -398,14 +633,14 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_sender",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_receiver",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "internalType": "struct SendRequest",
@@ -421,6 +656,11 @@
         {
           "internalType": "address",
           "name": "denomination",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "obligor",
           "type": "address"
         },
         {
@@ -443,6 +683,44 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "denomination",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "obligor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256[5]",
+          "name": "input",
+          "type": "uint256[5]"
+        }
+      ],
+      "name": "withdrawMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
   "linkReferences": {
@@ -450,11 +728,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 4825
+          "start": 1566
         },
         {
           "length": 20,
-          "start": 10390
+          "start": 12882
         }
       ]
     }
@@ -464,11 +742,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 4440
+          "start": 1006
         },
         {
           "length": 20,
-          "start": 10005
+          "start": 12322
         }
       ]
     }

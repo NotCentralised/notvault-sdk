@@ -24,6 +24,11 @@
           "internalType": "address",
           "name": "verifierAddress",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_metaRelay",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -187,19 +192,68 @@
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[3]",
-          "name": "input",
-          "type": "uint256[3]"
         }
       ],
       "name": "accept",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "acceptMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "addPayment",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "addPaymentMeta",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -218,6 +272,29 @@
         }
       ],
       "name": "addSendRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "addSendRequestMeta",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -288,6 +365,24 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
@@ -327,34 +422,90 @@
               "type": "string"
             },
             {
-              "internalType": "uint256",
-              "name": "createdTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "created",
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "cancelledOwner",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "cancelledCounterpart",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
-              "name": "acceptedTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "accepted",
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
-              "name": "expiryTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "expiry",
+              "type": "uint32"
             }
           ],
           "internalType": "struct ConfidentialDeal.DealStruct[]",
           "name": "",
           "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDealByID",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "tokenId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "tokenUri",
+              "type": "string"
+            },
+            {
+              "internalType": "uint32",
+              "name": "created",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "cancelledOwner",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "cancelledCounterpart",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "accepted",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "expiry",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct ConfidentialDeal.DealStruct",
+          "name": "",
+          "type": "tuple"
         }
       ],
       "stateMutability": "view",
@@ -383,29 +534,29 @@
               "type": "string"
             },
             {
-              "internalType": "uint256",
-              "name": "createdTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "created",
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "cancelledOwner",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "cancelledCounterpart",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
-              "name": "acceptedTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "accepted",
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
-              "name": "expiryTime",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "expiry",
+              "type": "uint32"
             }
           ],
           "internalType": "struct ConfidentialDeal.DealStruct[]",
@@ -449,19 +600,24 @@
               "type": "address"
             },
             {
+              "internalType": "address",
+              "name": "obligor",
+              "type": "address"
+            },
+            {
               "internalType": "uint256",
               "name": "amount_hash",
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "created",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "redeemed",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "internalType": "bool",
@@ -509,14 +665,14 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_sender",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "unlock_receiver",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "internalType": "struct SendRequest[]",
@@ -631,14 +787,38 @@
           "type": "address"
         },
         {
-          "internalType": "uint256",
-          "name": "minCommitment",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "uri",
+          "type": "string"
         },
         {
+          "internalType": "uint32",
+          "name": "expiry",
+          "type": "uint32"
+        }
+      ],
+      "name": "safeMint",
+      "outputs": [
+        {
           "internalType": "uint256",
-          "name": "idHash",
+          "name": "",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "counterpart",
+          "type": "address"
         },
         {
           "internalType": "string",
@@ -646,12 +826,12 @@
           "type": "string"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint32",
           "name": "expiry",
-          "type": "uint256"
+          "type": "uint32"
         }
       ],
-      "name": "safeMint",
+      "name": "safeMintMeta",
       "outputs": [
         {
           "internalType": "uint256",

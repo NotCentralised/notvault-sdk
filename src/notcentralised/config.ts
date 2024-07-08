@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.6.0 (config.ts)
+ Config SDK for Typescript v0.9.0 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -73,35 +73,40 @@ export const contractsTable : Record<string, any> = {
         vaultAddress:    '0x4C1fcce4474CEA690Af57f08eE189CaC4f2e4721',
         dealAddress:     '0xe8Fb759ABA61091700eBF85F35b866c751Ba6DD6',
         oracleAddress:   '0xa946D99b5dDdd21688AfBBF16c196052c93577Ba',
-        serviceAddress:  '0x9894CE6BB4dFdE24ACD6276D9CF4Fbd20d67d272'
+        serviceAddress:  '0x9894CE6BB4dFdE24ACD6276D9CF4Fbd20d67d272',
+        relayAddress:    '---'
     },
     '11155111': {         // SEPOLIA
         walletAddress:   '0x4b8Dfd5BdE2907c9b45E5C392421DE5B31E88313',
         vaultAddress:    '0x38Ad327aDF4c763C0686ED8DBc6fa45c7dAb29AE',
         dealAddress:     '0x52329a088c7d8EBd368fe67a6d3966E3BB42A5BB',
         oracleAddress:   '0x8b2a145b8ccdAfC79DDD3D6bE56Bd513a1e0AA49',
-        serviceAddress:  '0x5A95e579944a53370c51760A2db3dF6b96b866F1'
+        serviceAddress:  '0x5A95e579944a53370c51760A2db3dF6b96b866F1',
+        accessAddress:    '---'
     },
     '296': {             // HEDERA TESTNET
         walletAddress:   '0x7560B9002516B82F5a2f0828D906f82A6f77BfD5',
         vaultAddress:    '0xd8006605Fea3433D54922104eb39Cc8627e50c40',
         dealAddress:     '0x38c084eD2b82A07A8c2DF18f5e3dC5498cCDcD85',
         oracleAddress:   '0xeEBb3548334c30DFeFE07097Cf421c8A729a8209',
-        serviceAddress:  '0xCe011732b409bA13329Be37a36b1E129aeAbfac5'
+        serviceAddress:  '0xCe011732b409bA13329Be37a36b1E129aeAbfac5',
+        accessAddress:    '---'
     },
     '31337': {           // LOCALHOST
-        walletAddress:   '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318',
-        vaultAddress:    '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
-        dealAddress:     '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
-        oracleAddress:   '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
-        serviceAddress:  '0x9A676e781A523b5d0C0e43731313A708CB607508'
+        walletAddress:   '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
+        vaultAddress:    '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
+        dealAddress:     '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
+        oracleAddress:   '0x9A676e781A523b5d0C0e43731313A708CB607508',
+        serviceAddress:  '0x0B306BF915C4d645ff596e518fAf3F9669b97016',
+        accessAddress:    '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318'
     },
     '84531': {           // BASE GOERLI
         walletAddress:   '0xF972E1A76F08c377bF0DB8ed52a231EE99bD0b41',
         vaultAddress:    '0x9d68228C8E043630041Cf08f911D2EC329390555',
         dealAddress:     '0xFCC3B351310c2E16035E2126cee14175F5350c91',
         oracleAddress:   '0xbbf1D9AE5919E25567e17FE0e5187f35F6F562a6',
-        serviceAddress:  '0x24A4d3335f88e59FA672093226D666B1D9CAACAf'
+        serviceAddress:  '0x24A4d3335f88e59FA672093226D666B1D9CAACAf',
+        accessAddress:    '---'
     }
 };
 
@@ -124,7 +129,7 @@ export const getConfig = (
                 { key: 'receiver', value: 'HashReceiver' }, 
                 { key: 'sender', value: 'HashSender' }, 
                 { key: 'approver', value: 'HashApprover' }, 
-                { key: 'minCommitment', value: 'HashMinCommitment' }, 
+                { key: 'paymentSignature', value: 'HashPaymentSignature' }, 
                 { key: 'textExpiryData', value: 'TextExpiryData' }, 
                 { key: 'textData', value: 'TextData' }, 
                 { key: 'numericalData', value: 'NumericalData' },

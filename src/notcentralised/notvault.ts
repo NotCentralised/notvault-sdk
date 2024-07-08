@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.6.0 (notvault.ts)
+ NotVault SDK for Typescript v0.9.0 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -36,12 +36,12 @@ export const hederaList = ['295', '296', '297', '298']
 
 export type WalletDB = {
     // layerc.privatebalances
-    privateBalanceOf: (vaultAddress: string, walletAddress: string, denomination: string) => Promise<string>
-    setPrivateBalance: (address: string, vaultAddress: string, denomination: string, amount: string) => Promise<void>
+    privateBalanceOf: (address: string, vaultAddress: string, denomination: string, obligor: string) => Promise<string>
+    setPrivateBalance: (address: string, vaultAddress: string, denomination: string, obligor: string, amount: string) => Promise<void>
     
     // layerc.privateamounts
-    privateAmountOf: (senderAddress: string, vaultAddress?: string, walletAddress?: string, idHash?: string | bigint) => Promise<string>
-    setPrivateAmount: (address: string, vaultAddress?: string, walletAddress?: string, idHash?: string, amount?: string) => Promise<void>
+    privateAmountOf: (sender: string, vaultAddress: string, address: string, idHash: string | bigint) => Promise<string>
+    setPrivateAmount: (sender: string, vaultAddress: string, address: string, idHash: string, amount: string) => Promise<void>
     
     getAddressByContactId: (id : string) => Promise<string>
     getPublicKey: (address: string) => Promise<string>
@@ -197,10 +197,10 @@ export class NotVault
             const publicKey = this.db ? await this.db.getPublicKey(address) : await this.confidentialWallet.getPublicKey(address);
             const encryptedPrivateKey= this.db ? await this.db.getEncryptedPrivateKey(address) : await this.confidentialWallet.getEncryptedPrivateKey(address);
             const encryptedContactId= this.db ? await this.db.getEncryptedContactId(address) : await this.confidentialWallet.getEncryptedContactId(address);
-
+            
             const privateKey = await decryptBySecret(secretKey, encryptedPrivateKey);
             const contactId = await decrypt(privateKey, encryptedContactId);
-
+            
             this.address = address;
             this.publicKey = publicKey;
             this.privateKey = privateKey;
@@ -277,7 +277,7 @@ export class NotVault
         if(!(this.address && this.confidentialWallet && this.chainId))
             throw new Error('Vault is not initialised');
 
-        const tx = await this.confidentialWallet.populateTransaction.setValue(key, value);
+        const tx = await this.confidentialWallet.populateTransaction.setValueMeta(this.address, key, value);
         return tx;
     }
 
@@ -287,20 +287,41 @@ export class NotVault
         await this.sendTx(stx, this.signer?.provider);
     }
 
-    signTx = async (tx: PopulatedTransaction) => {
+    signTx = async (tx: PopulatedTransaction, getNonce?: ()=>Promise<number>) => {
         if(!this.signer)
             throw new Error("No Signer");
 
+        const nonce = getNonce ? await getNonce() : await this.signer.getTransactionCount();
+
+        const gasPrice = await this.signer.getGasPrice();
+        const gasLimit = await this.signer.estimateGas(tx)
+        
         const signedTx = await this.signer.signTransaction({
             to: tx.to,
             data: tx.data,
-            gasLimit: utils.hexlify(await this.signer.estimateGas(tx)), // Estimate or set the gas limit
-            gasPrice: await this.signer.getGasPrice(), // Get current gas price
-            nonce: await this.signer.getTransactionCount(), // Get the nonce for the owner,
+            gasLimit: utils.hexlify(gasLimit), // Estimate or set the gas limit
+            gasPrice: gasPrice, // Get current gas price
+            nonce: nonce, // Get the nonce for the owner,
             chainId: await this.signer.getChainId()
         });
 
         return signedTx;
+    }
+
+    signMetaTx = async (tx: PopulatedTransaction, getNonce?: () => Promise<number>) => {
+        if (!(this.signer && this.address && tx.data)) throw new Error("No Signer");
+
+        const messageHash = utils.solidityKeccak256(['bytes'], [tx.data]);
+        
+        const prefixedHash = utils.hashMessage(utils.arrayify(messageHash));
+        // Sign the message hash
+        const flatSig = await this.signer.signMessage(utils.arrayify(prefixedHash));
+
+        return {
+            tx: tx,
+            messageHash: prefixedHash,
+            signature: flatSig
+        };
     }
 
     sendTx = async (stx: string, provider?: providers.Provider) => {
@@ -340,7 +361,7 @@ export class NotVault
         if(!(this.address && this.confidentialWallet && this.chainId))
             throw new Error('Vault is not initialised');
 
-        const tx = await this.confidentialWallet.populateTransaction.setFileIndex(value);
+        const tx = await this.confidentialWallet.populateTransaction.setFileIndexMeta(this.address, value);
         return tx;
     }
 
@@ -371,7 +392,7 @@ export class NotVault
         if(!(this.address && this.confidentialWallet && this.chainId))
             throw new Error('Vault is not initialised');
 
-        const tx = await this.confidentialWallet.populateTransaction.setCredentialIndex(value);
+        const tx = await this.confidentialWallet.populateTransaction.setCredentialIndexMeta(this.address, value);
         return tx;
     }
 

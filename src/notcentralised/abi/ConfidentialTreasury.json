@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ProxyToken",
-  "sourceName": "contracts/ProxyToken.sol",
+  "contractName": "ConfidentialTreasury",
+  "sourceName": "contracts/ConfidentialTreasury.sol",
   "abi": [
     {
       "inputs": [
@@ -19,6 +19,11 @@
           "internalType": "uint256",
           "name": "total_supply",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_accessControl",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -145,6 +150,29 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "destination",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "approveMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "account",
           "type": "address"
         }
@@ -158,6 +186,24 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "burnMeta",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -218,6 +264,24 @@
           "type": "bool"
         }
       ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "mintMeta",
+      "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     },
