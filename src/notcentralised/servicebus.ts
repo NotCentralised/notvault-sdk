@@ -14,7 +14,7 @@
 */
 
 
-import { NotVault, hederaList } from './notvault';
+import { NotVault } from './notvault';
 
 import { genProof } from './proof';
 
@@ -33,28 +33,16 @@ export class ServiceBus
         const proof = await genProof(this.vault, 'approver', { key: key, value: value});
         const value_hash = proof.inputs[0];
         
-        if(hederaList.includes(this.vault.chainId)){
-            const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs, { gasLimit: BigInt(300_000/*291_582*/) });
-            await tx.wait();
+        const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs);
+        await tx.wait();
 
-            const tx_hash = tx.hash;
+        const tx_hash = tx.hash;
 
-            return {
-                value: value_hash,
-                hash: tx_hash
-            };
-        }
-        else{
-            const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs);
-            await tx.wait();
-
-            const tx_hash = tx.hash;
-
-            return {
-                value: value_hash,
-                hash: tx_hash
-            };
-        }
+        return {
+            value: value_hash,
+            hash: tx_hash
+        };
+    
     }
 
     getValue = async (address: string, key: BigInt) : Promise<BigInt> =>  {

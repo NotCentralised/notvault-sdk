@@ -7,6 +7,35 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "_policyVerifier",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "denomination",
+          "type": "address"
+        }
+      ],
+      "name": "addTreasurer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "userAddress",
           "type": "address"
         },
@@ -63,7 +92,7 @@
           "type": "bool"
         }
       ],
-      "stateMutability": "pure",
+      "stateMutability": "view",
       "type": "function"
     }
   ],

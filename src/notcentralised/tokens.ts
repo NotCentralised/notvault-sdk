@@ -14,7 +14,7 @@
  Author: @NumbersDeFi 
 */
 
-import { NotVault, hederaList } from './notvault';
+import { NotVault } from './notvault';
 
 import * as EthCrypto from "eth-crypto";
 
@@ -24,12 +24,10 @@ import ConfidentialTreasury from './abi/ConfidentialTreasury.json';
 import { encrypt } from './encryption';
 import { genProof } from './proof';
 
-import { DealStruct} from './deals';
-
 export type SendRequest = {
     idHash: bigint,
     sender: string,
-    recipient: string,
+    // recipient: string,
     amount: bigint,
     created: number,
     unlock_sender: number,
@@ -40,7 +38,9 @@ export type SendRequest = {
     amount_hash: bigint,
     
     deal_address: string,
+    deal_group_id: string,
     deal_id: bigint,
+
     denomination: string,
     obligor: string,
     oracle_address: string,
@@ -68,12 +68,10 @@ export class Tokens
         this.vault = vault;
     }
 
-    _encryptedBalance = '';
-    _decryptedBalance = BigInt(0);
-    _lockedIn: SendRequest[] = [];
-    _lockedOut: SendRequest[] = [];
+    getBalance = async (denomination: string, obligor: string, groupId? : BigInt) : Promise<Balance> => {
+        let _lockedIn: SendRequest[] = [];
+        let _lockedOut: SendRequest[] = [];
 
-    getBalance = async (denomination: string, obligor: string) : Promise<Balance> => {
         const walletData = this.vault.getWalletData();
         if(!walletData.address)
             throw new Error('Vault is not initialised');
@@ -88,26 +86,32 @@ export class Tokens
 
         if(!this.vault.confidentialDeal)
             throw new Error('Deal is not initialised');
-
-
-        const privateBalance = this.vault.db?.privateBalanceOf ? await this.vault.db?.privateBalanceOf(walletData.address, this.vault.confidentialVault.address, denomination, obligor) : await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, denomination);
         
-        if (this._encryptedBalance !== privateBalance) {
-            this._encryptedBalance = privateBalance;
-            
-            this._decryptedBalance = this._encryptedBalance === '' ? BigInt(0) : (BigInt(await this.vault.decrypt(privateBalance)));
+        // const group_id = groupId ?? walletData.groupId ?? BigInt(0);
+        const group_id = groupId ?? BigInt(0);
 
-            const __lockedOut = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, obligor, true);
+        const privateBalance = this.vault.db?.privateBalanceOf ? await this.vault.db?.privateBalanceOf(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor) : await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, denomination);
+
+        let _encryptedBalance = '';
+        let _decryptedBalance = BigInt(0);
+    
+        
+        if (_encryptedBalance !== privateBalance) {
+            _encryptedBalance = privateBalance;
+            
+            _decryptedBalance = _encryptedBalance === '' ? BigInt(0) : (BigInt(await this.vault.decrypt(privateBalance)));
+
+            const __lockedOut = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), true);
             
             if(__lockedOut.length > 0){
             
-                this._lockedOut = await Promise.all(__lockedOut.filter((element: any) => element.denomination === denomination).map(async (element: any) => {
-                    const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(element.sender, this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash.toString()) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
+                _lockedOut = await Promise.all(__lockedOut.filter((element: any) => element.denomination === denomination).map(async (element: any) => {
+                    const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash.toString()) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
                     const _amount = await this.vault.decrypt(__amount);
                     return {
                         idHash: element.idHash,
                         sender: element.sender,
-                        recipient: element.recipient,
+                        // recipient: element.recipient,
                         amount: BigInt(_amount),
                         created: Number(element.created),
                         unlock_sender: Number(element.unlock_sender),
@@ -118,6 +122,7 @@ export class Tokens
                         amount_hash: BigInt(element.amount_hash),
                         
                         deal_address: element.deal_address,
+                        deal_group_id: element.deal_group_id,
                         deal_id: BigInt(element.deal_id),
                         denomination: element.denomination,
                         obligor: element.obligor,
@@ -134,23 +139,26 @@ export class Tokens
             }            
         }
 
-        let __lockedIn : SendRequest[] = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, obligor, false);
+        let __lockedIn : SendRequest[] = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), false);
+
+        // console.log("--- __lockedIn: ", group_id, " <-> ", __lockedIn)
 
         const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
         const _dealLock = await Promise.all(_deals.map(async deal => {
-            return await this.vault.confidentialVault?.getSendRequestByAddress(this.vault.confidentialDeal?.address, deal.tokenId, false);
+            // console.log("--- _deals: ", deal)
+            return await this.vault.confidentialVault?.getSendRequestByAddress(this.vault.confidentialDeal?.address, group_id, deal.tokenId, false);
         }));
 
         __lockedIn = __lockedIn.concat(_dealLock.flat())
 
         if(__lockedIn.length > 0)
-            this._lockedIn = await Promise.all(__lockedIn.filter((element: any) => element.denomination === denomination).map(async element => {
-                const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(element.sender, this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
+            _lockedIn = await Promise.all(__lockedIn.filter((element: any) => element.denomination === denomination).map(async element => {
+                const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
                 const _amount = await this.vault.decrypt(__amount);
                 return {
                     idHash: element.idHash,
                     sender: element.sender,
-                    recipient: element.recipient,
+                    // recipient: element.recipient,
                     amount: BigInt(_amount),
                     created: Number(element.created),
                     unlock_sender: Number(element.unlock_sender),
@@ -161,6 +169,7 @@ export class Tokens
                     amount_hash: BigInt(element.amount_hash),
 
                     deal_address: element.deal_address,
+                    deal_group_id: element.deal_group_id,
                     deal_id: BigInt(element.deal_id),
                     denomination: element.denomination,
                     obligor: element.obligor,
@@ -176,7 +185,7 @@ export class Tokens
             }));        
         const { balance, decimals } = await this.tokenBalance(denomination);
 
-        return { privateBalance: this._decryptedBalance, lockedOut: this._lockedOut, lockedIn: this._lockedIn, balance: balance, decimals: decimals };
+        return { privateBalance: _decryptedBalance, lockedOut: _lockedOut, lockedIn: _lockedIn, balance: balance, decimals: decimals };
     }
 
     private tokenDecimalCache : { [key: string]: string } = {};
@@ -208,6 +217,9 @@ export class Tokens
         if(!this.vault.confidentialWallet)
             throw new Error('Wallet is not initialised');
 
+        // const group_id = walletData.groupId ?? BigInt(0);
+        const group_id = BigInt(0);
+
         const beforeBalance = await this.getBalance(denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) + BigInt(amount);
         const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
@@ -215,29 +227,17 @@ export class Tokens
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
         
         const tokenProxy = new Contract(denomination, ConfidentialTreasury.abi, this.vault.signer);
-        if(hederaList.includes(this.vault.chainId)){
-            const tx = await tokenProxy.approve(this.vault.confidentialVault.address, amount, { gasLimit: BigInt(50_000/*46_923*/) });
-            await tx.wait();
-        }
-        else{
-            const tx = await tokenProxy.approve(this.vault.confidentialVault.address, amount);
-            await tx.wait();
-        }
-
-        if(hederaList.includes(this.vault.chainId)){
-            const tx1 = await this.vault.confidentialVault.deposit(denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, { gasLimit: BigInt(600_000/*552_191*/) });
-            await tx1.wait();
-            const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
-            if(tx2.wait)
-                await tx2.wait();
-        }
-        else{
-            const tx1 = await this.vault.confidentialVault.deposit(denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs);
-            await tx1.wait();
-            const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
-            if(tx2.wait)
-                await tx2.wait();
-        }
+        
+        const tx = await tokenProxy.approve(this.vault.confidentialVault.address, amount);
+        await tx.wait();
+    
+        
+        const tx1 = await this.vault.confidentialVault.deposit(denomination, group_id, obligor, amount, proofReceive.solidityProof, proofReceive.inputs);
+        await tx1.wait();
+        const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
+        if(tx2.wait)
+            await tx2.wait();
+    
     }
 
     depositTx = async (denomination: string, obligor: string, amount: bigint) : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
@@ -262,8 +262,11 @@ export class Tokens
         
         const tokenProxy = new Contract(denomination, ConfidentialTreasury.abi, this.vault.signer);
         const tx = await tokenProxy.populateTransaction.approveMeta(walletData.address, this.vault.confidentialVault.address, amount);
+
+        // const group_id = walletData.groupId ?? BigInt(0);
+        const group_id = BigInt(0);
         
-        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs);
+        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs);
         
         return {
             approveTx: tx,
@@ -286,13 +289,15 @@ export class Tokens
                 throw new Error('Wallet is not initialised');
         }
 
+        const group_id = BigInt(0);
+
         const beforeBalance = await this.getBalance(denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) + BigInt(amount);
         const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
         
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
         
-        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs);
+        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs);
         
         return {
             // approveTx: tx,
@@ -313,6 +318,9 @@ export class Tokens
                 throw new Error('Wallet is not initialised');
         }
     
+        // const group_id = walletData.groupId ?? BigInt(0);
+        const group_id = BigInt(0);
+
         const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address);
     
         const beforeBalance = await this.getBalance(denomination, obligor);
@@ -323,21 +331,12 @@ export class Tokens
     
         const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce) });
 
-        if(hederaList.includes(this.vault.chainId)){
-            const tx1 = await this.vault.confidentialVault.withdraw(denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs, { gasLimit: BigInt(400_000/*374_927*/) });
-            await tx1.wait();
-            const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet?.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
-            if(tx2.wait)
-                await tx2.wait();
-        }
-        else{
-            const tx1 = await this.vault.confidentialVault.withdraw(walletData.address, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
-            await tx1.wait();
-            const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet?.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
-            if(tx2.wait)
-                await tx2.wait();
-        }
-        
+        const tx1 = await this.vault.confidentialVault.withdraw(walletData.address, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
+        await tx1.wait();
+        const tx2 = this.vault.db?.setPrivateBalance ? await this.vault.db?.setPrivateBalance(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance) : await this.vault.confidentialWallet?.setPrivateBalance(this.vault.confidentialVault.address, denomination, obligor, privateAfterBalance);
+        if(tx2.wait)
+            await tx2.wait();
+    
         return proofSend.inputs[4];
     }
 
@@ -352,9 +351,11 @@ export class Tokens
             if(!this.vault.confidentialWallet)
                 throw new Error('Wallet is not initialised');
         }
+
+        const group_id = BigInt(0);
     
-        const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address);
-    
+        const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address, group_id);
+
         const beforeBalance = await this.getBalance(denomination, obligor);
     
         const afterBalance = BigInt(beforeBalance.privateBalance) - BigInt(amount);
@@ -363,7 +364,9 @@ export class Tokens
     
         const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce) });
 
-        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
+
+
+        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
         
         return {
             idHash: proofSend.inputs[4],
@@ -401,6 +404,9 @@ export class Tokens
         if(destinationAddress === zeroAddress)
             destinationAddress = destination;
 
+        // const group_id = walletData.groupId ?? BigInt(0);
+        const group_id = BigInt(0);
+
         const counterPublicKey =this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
 
         const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address);
@@ -427,8 +433,8 @@ export class Tokens
         if(oracleKeyRecipient && oracleValueRecipient)
             proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient});
 
-
-        const deal_address = this.vault.confidentialDeal.address;
+        const deal_address = destinationAddress === '' ? this.vault.confidentialDeal.address : destinationAddress;
+        const deal_group_id = BigInt(0);
         const deal_id = dealId || BigInt(0);
         const oracle_address = oracleAddress || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
         const oracle_owner = oracleOwner || zeroAddress;
@@ -451,181 +457,98 @@ export class Tokens
             oracle_key_recipient: oracle_key_recipient, oracle_value_recipient: oracle_value_recipient, 
             
             unlock_sender: unlock_sender, unlock_receiver: unlock_receiver,
+            deal_address: deal_address,
+            deal_group_id: deal_group_id,
             deal_id: dealId ?? BigInt(0)
         });
     
         const idHash = proofSignature.inputs[1];
-        
-        if(hederaList.includes(this.vault.chainId)){
-            const tx1 = await this.vault.confidentialVault
-                .createRequest([{ 
-                    recipient: destinationAddress, 
-                    denomination: denomination, 
-                    obligor: obligor,
-                
-                    oracle_address: oracle_address,
-                    oracle_owner: oracle_owner,
-
-                    oracle_key_sender: oracle_key_sender,
-                    oracle_value_sender: proofApproveSender ? proofApproveSender.inputs[0] : oracle_value_sender,
-                    oracle_key_recipient: oracle_key_recipient,
-                    oracle_value_recipient: proofApproveRecipient ? proofApproveRecipient.inputs[0] : oracle_value_recipient,
-
-                    unlock_sender: unlock_sender,
-                    unlock_receiver: unlock_receiver,
-                
-                    proof_send: proofSend.solidityProof, 
-                    input_send: proofSend.inputs,
-
-                    proof_signature: proofSignature.solidityProof, 
-                    input_signature: proofSignature.inputs
-                }], deal_address, deal_id, false, { gasLimit: BigInt(1_200_000/*1_152_414*/) });
+    
+        const tx1 = await this.vault.confidentialVault
+            .createRequestMeta(walletData.address, group_id, [{ 
+                // recipient: destinationAddress, 
+                denomination: denomination, 
+                obligor: obligor,
             
-            await tx1.wait();
+                oracle_address: oracle_address,
+                oracle_owner: oracle_owner,
 
-            const tx2 = this.vault.db ? 
-                await this.vault.db.setPrivateBalance(
-                    walletData.address,
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    privateAfterBalance
-                ) 
-                : 
-                await this.vault.confidentialWallet.setPrivateBalance(
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    privateAfterBalance
-                );
+                oracle_key_sender: oracle_key_sender,
+                oracle_value_sender: proofApproveSender ? proofApproveSender.inputs[0] : oracle_value_sender,
+                oracle_key_recipient: oracle_key_recipient,
+                oracle_value_recipient: proofApproveRecipient ? proofApproveRecipient.inputs[0] : oracle_value_recipient,
 
-            if(tx2.wait)
-                await tx2.wait();
-
-            const tx3 = this.vault.db ? 
-                await this.vault.db.setPrivateAmount(
-                    walletData.address,
-                    this.vault.confidentialVault.address,
-                    walletData.address,
-                    idHash,
-                    privateAmount_from
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateAmount(
-                    this.vault.confidentialVault.address,
-                    walletData.address,
-                    idHash,
-                    privateAmount_from
-                );
-
-            if(tx3.wait)
-                await tx3.wait();
-
-            const tx4 = this.vault.db ? 
-                await this.vault.db.setPrivateAmount(
-                    walletData.address,
-                    this.vault.confidentialVault.address,
-                    destinationAddress,
-                    idHash,
-                    privateAmount_to
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateAmount(
-                    this.vault.confidentialVault.address,
-                    destinationAddress,
-                    idHash,
-                    privateAmount_to
-                );
-
-            if(tx4.wait)
-                await tx4.wait();
-        }
-        else {
-            const tx1 = await this.vault.confidentialVault
-                .createRequest([{ 
-                    recipient: destinationAddress, 
-                    denomination: denomination, 
-                    obligor: obligor,
-                
-                    oracle_address: oracle_address,
-                    oracle_owner: oracle_owner,
-
-                    oracle_key_sender: oracle_key_sender,
-                    oracle_value_sender: proofApproveSender ? proofApproveSender.inputs[0] : oracle_value_sender,
-                    oracle_key_recipient: oracle_key_recipient,
-                    oracle_value_recipient: proofApproveRecipient ? proofApproveRecipient.inputs[0] : oracle_value_recipient,
-
-                    unlock_sender: unlock_sender,
-                    unlock_receiver: unlock_receiver,
-                
-                    proof_send: proofSend.solidityProof, 
-                    input_send: proofSend.inputs,
-
-                    proof_signature: proofSignature.solidityProof, 
-                    input_signature: proofSignature.inputs
-
-                    }], deal_address, deal_id, false);
+                unlock_sender: unlock_sender,
+                unlock_receiver: unlock_receiver,
             
-            await tx1.wait();
+                proof_send: proofSend.solidityProof, 
+                input_send: proofSend.inputs,
 
-            const tx2 = this.vault.db ? 
-                await this.vault.db.setPrivateBalance(
-                    walletData.address,
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    privateAfterBalance
-                ) 
-                : 
-                await this.vault.confidentialWallet
-                    .setPrivateBalance(
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    privateAfterBalance
-                );
+                proof_signature: proofSignature.solidityProof, 
+                input_signature: proofSignature.inputs
+            }], deal_address, deal_group_id, deal_id, false);
+            
+        await tx1.wait();
 
-            if(tx2.wait)
-                await tx2.wait();
+        const tx2 = this.vault.db ? 
+            await this.vault.db.setPrivateBalance(
+                walletData.address,
+                group_id.toString(),
+                this.vault.confidentialVault.address,
+                denomination,
+                obligor,
+                privateAfterBalance
+            ) 
+            : 
+            await this.vault.confidentialWallet
+                .setPrivateBalance(
+                this.vault.confidentialVault.address,
+                denomination,
+                obligor,
+                privateAfterBalance
+            );
 
-            const tx3 = this.vault.db ? 
-                await this.vault.db.setPrivateAmount(
-                    this.vault.getWalletData().address ?? '',
-                    this.vault.confidentialVault.address,
-                    this.vault.getWalletData().address ?? '',
-                    idHash,
-                    privateAmount_from
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateAmount(
-                    this.vault.confidentialVault.address,
-                    this.vault.getWalletData().address,
-                    idHash,
-                    privateAmount_from
-                );
+        if(tx2.wait)
+            await tx2.wait();
 
-            if(tx3.wait)
-                await tx3.wait();
+        const tx3 = this.vault.db ? 
+            await this.vault.db.setPrivateAmount(
+                this.vault.getWalletData().address ?? '',
+                this.vault.confidentialVault.address,
+                this.vault.getWalletData().address ?? '',
+                idHash,
+                privateAmount_from
+            )
+            :
+            await this.vault.confidentialWallet.setPrivateAmount(
+                this.vault.confidentialVault.address,
+                this.vault.getWalletData().address,
+                idHash,
+                privateAmount_from
+            );
 
-            const tx4 = this.vault.db ? 
-                await this.vault.db.setPrivateAmount(
-                    this.vault.getWalletData().address ?? '',
-                    this.vault.confidentialVault.address,
-                    destinationAddress,
-                    idHash,
-                    privateAmount_to
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateAmount(
-                    this.vault.confidentialVault.address,
-                    destinationAddress,
-                    idHash,
-                    privateAmount_to
-                );
+        if(tx3.wait)
+            await tx3.wait();
 
-            if(tx4.wait)
-                await tx4.wait();
-        }
+        const tx4 = this.vault.db ? 
+            await this.vault.db.setPrivateAmount(
+                this.vault.getWalletData().address ?? '',
+                this.vault.confidentialVault.address,
+                destinationAddress,
+                idHash,
+                privateAmount_to
+            )
+            :
+            await this.vault.confidentialWallet.setPrivateAmount(
+                this.vault.confidentialVault.address,
+                destinationAddress,
+                idHash,
+                privateAmount_to
+            );
+
+        if(tx4.wait)
+            await tx4.wait();
+    
         return idHash;
     }
 
@@ -646,6 +569,7 @@ export class Tokens
 
         unlockSender?: number, 
         unlockReceiver?:number,
+        dealGroupId?: BigInt,
         dealId?: BigInt
     ) : Promise<{
         idHash: string, 
@@ -657,15 +581,18 @@ export class Tokens
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId && this.vault.confidentialVault && this.vault.confidentialDeal && this.vault.confidentialWallet))
             throw new Error('Vault is not initialised');
-
+        
         const hashContactId = EthCrypto.hash.keccak256(destination.toLowerCase().trim());
         let destinationAddress = this.vault.db ? await this.vault.db.getAddressByContactId(hashContactId) : await this.vault.confidentialWallet.getAddressByContactId(hashContactId);
         if(destinationAddress === zeroAddress)
             destinationAddress = destination;
 
+        // const group_id = walletData.groupId ?? BigInt(0);
+        const group_id = BigInt(0);
+
         const counterPublicKey =this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
 
-        const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address);
+        const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address, group_id);
 
         const beforeBalance = await this.getBalance(denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) - BigInt(amount);
@@ -685,8 +612,9 @@ export class Tokens
             proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient});
 
 
-        const deal_address = this.vault.confidentialDeal.address;
-        const deal_id = dealId || BigInt(0);
+        const deal_address = destinationAddress === '' ? this.vault.confidentialDeal.address : destinationAddress;
+        const deal_group_id = dealGroupId ?? BigInt(0);
+        const deal_id = dealId ?? BigInt(0);
         const oracle_address = oracleAddress || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
         const oracle_owner = oracleOwner || zeroAddress;
 
@@ -698,8 +626,6 @@ export class Tokens
         const unlock_sender = unlockSender || 0;
         const unlock_receiver = unlockReceiver || 0;
 
-        const dealStruct: DealStruct = dealId ? await this.vault.confidentialDeal.getDealByID(deal_id) : undefined;
-
         const proofSignature = await genProof(this.vault, 'paymentSignature', { 
             denomination: denomination,
             obligor: obligor,
@@ -710,6 +636,9 @@ export class Tokens
             oracle_key_recipient: oracle_key_recipient, oracle_value_recipient: oracle_value_recipient, 
             
             unlock_sender: unlock_sender, unlock_receiver: unlock_receiver,
+
+            deal_address: deal_address,
+            deal_group_id: deal_group_id,
             deal_id: dealId ?? BigInt(0)
         });
 
@@ -717,8 +646,7 @@ export class Tokens
             
         const tx1 = await this.vault.confidentialVault
             .populateTransaction
-            .createRequestMeta(walletData.address, [{ 
-                    recipient: destinationAddress, 
+            .createRequestMeta(walletData.address, group_id, [{ 
                     denomination: denomination, 
                     obligor: obligor,
                 
@@ -738,7 +666,7 @@ export class Tokens
 
                     proof_signature: proofSignature.solidityProof, 
                     input_signature: proofSignature.inputs
-                }], deal_address, deal_id, false);
+                }], deal_address, deal_group_id, deal_id, false);
         
         return {
             idHash: idHash, 
@@ -750,69 +678,43 @@ export class Tokens
     }
     
     retreive = async (idHash: string, denomination: string, obligor: string) => {
-        const walletData = this.vault.getWalletData();
-        if(!(walletData.address && walletData.publicKey && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet))
-            throw new Error('Vault is not initialised');
+        // const walletData = this.vault.getWalletData();
+        // if(!(walletData.address && walletData.publicKey && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet))
+        //     throw new Error('Vault is not initialised');
 
-        const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
-        const beforeBalance = await this.getBalance(denomination, obligor);
+        // const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
+        // const beforeBalance = await this.getBalance(denomination, obligor);
 
-        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
+        // const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
     
-        const amount = BigInt(await this.vault.decrypt(privateAmount));
+        // const amount = BigInt(await this.vault.decrypt(privateAmount));
     
-        const afterBalance = await encrypt(walletData.publicKey, beforeBalance.privateBalance + amount);
+        // const afterBalance = await encrypt(walletData.publicKey, beforeBalance.privateBalance + amount);
     
-        const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
+        // const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
 
-        if(hederaList.includes(this.vault.chainId)){
-            const tx1 = await this.vault.confidentialVault.acceptRequest(idHash, proofReceive.solidityProof, proofReceive.inputs, { gasLimit: BigInt(650_000/*618_821*/) });
-            await tx1.wait();
+        // const tx1 = await this.vault.confidentialVault.acceptRequest(idHash, proofReceive.solidityProof, proofReceive.inputs);
+        // await tx1.wait();
 
-            const tx2 = 
-                this.vault.db ?
-                await this.vault.db.setPrivateBalance(
-                    walletData.address, 
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    afterBalance
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateBalance(
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    afterBalance
-                );
+        // const tx2 = 
+        //     this.vault.db ?
+        //     await this.vault.db.setPrivateBalance(
+        //         walletData.address, 
+        //         this.vault.confidentialVault.address,
+        //         denomination,
+        //         obligor,
+        //         afterBalance
+        //     )
+        //     :
+        //     await this.vault.confidentialWallet.setPrivateBalance(
+        //         this.vault.confidentialVault.address,
+        //         denomination,
+        //         obligor,
+        //         afterBalance
+        //     );
 
-            if(tx2.wait)
-                await tx2.wait();
-        }
-        else{
-            const tx1 = await this.vault.confidentialVault.acceptRequest(idHash, proofReceive.solidityProof, proofReceive.inputs);
-            await tx1.wait();
-
-            const tx2 = 
-                this.vault.db ?
-                await this.vault.db.setPrivateBalance(
-                    walletData.address, 
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    afterBalance
-                )
-                :
-                await this.vault.confidentialWallet.setPrivateBalance(
-                    this.vault.confidentialVault.address,
-                    denomination,
-                    obligor,
-                    afterBalance
-                );
-
-            if(tx2.wait)
-                await tx2.wait();
-        }
+        // if(tx2.wait)
+        //     await tx2.wait();
     }
 
     retreiveTx = async (idHash: string, denomination: string, obligor: string) : Promise<{acceptRequestTx: PopulatedTransaction, privateAfterBalance: string}> => {
@@ -823,7 +725,7 @@ export class Tokens
         const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
         const beforeBalance = await this.getBalance(denomination, obligor);
 
-        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
+        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, walletData.address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
     
         const amount = BigInt(await this.vault.decrypt(privateAmount));
 

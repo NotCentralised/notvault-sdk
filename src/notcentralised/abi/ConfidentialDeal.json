@@ -27,7 +27,7 @@
         },
         {
           "internalType": "address",
-          "name": "_metaRelay",
+          "name": "_accessControl",
           "type": "address"
         }
       ],
@@ -189,19 +189,6 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "accept",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "caller",
           "type": "address"
@@ -213,24 +200,6 @@
         }
       ],
       "name": "acceptMeta",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "idHash",
-          "type": "uint256"
-        }
-      ],
-      "name": "addPayment",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -254,24 +223,6 @@
         }
       ],
       "name": "addPaymentMeta",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "idHash",
-          "type": "uint256"
-        }
-      ],
-      "name": "addSendRequest",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -352,19 +303,6 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "cancel",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "caller",
           "type": "address"
@@ -415,6 +353,11 @@
               "internalType": "uint256",
               "name": "tokenId",
               "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "counterpart",
+              "type": "address"
             },
             {
               "internalType": "string",
@@ -473,6 +416,11 @@
               "type": "uint256"
             },
             {
+              "internalType": "address",
+              "name": "counterpart",
+              "type": "address"
+            },
+            {
               "internalType": "string",
               "name": "tokenUri",
               "type": "string"
@@ -527,6 +475,11 @@
               "internalType": "uint256",
               "name": "tokenId",
               "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "counterpart",
+              "type": "address"
             },
             {
               "internalType": "string",
@@ -590,9 +543,9 @@
               "type": "address"
             },
             {
-              "internalType": "address",
-              "name": "recipient",
-              "type": "address"
+              "internalType": "uint256",
+              "name": "group_id",
+              "type": "uint256"
             },
             {
               "internalType": "address",
@@ -628,6 +581,11 @@
               "internalType": "address",
               "name": "deal_address",
               "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_group_id",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
@@ -776,35 +734,6 @@
       "inputs": [],
       "name": "renounceOwnership",
       "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "counterpart",
-          "type": "address"
-        },
-        {
-          "internalType": "string",
-          "name": "uri",
-          "type": "string"
-        },
-        {
-          "internalType": "uint32",
-          "name": "expiry",
-          "type": "uint32"
-        }
-      ],
-      "name": "safeMint",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
       "stateMutability": "nonpayable",
       "type": "function"
     },

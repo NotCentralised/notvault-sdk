@@ -24,33 +24,15 @@
           "internalType": "address",
           "name": "_accessControl",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_group",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "idHash",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[3]",
-          "name": "input",
-          "type": "uint256[3]"
-        }
-      ],
-      "name": "acceptRequest",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
     },
     {
       "inputs": [
@@ -89,30 +71,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "idHash",
+          "name": "group_id",
           "type": "uint256"
-        }
-      ],
-      "name": "canAccept",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
+        },
         {
           "components": [
-            {
-              "internalType": "address",
-              "name": "recipient",
-              "type": "address"
-            },
             {
               "internalType": "address",
               "name": "denomination",
@@ -195,113 +158,8 @@
         },
         {
           "internalType": "uint256",
-          "name": "deal_id",
+          "name": "deal_group_id",
           "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "agree",
-          "type": "bool"
-        }
-      ],
-      "name": "createRequest",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "caller",
-          "type": "address"
-        },
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "recipient",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "denomination",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "obligor",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "oracle_address",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "oracle_owner",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "oracle_key_sender",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "oracle_value_sender",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "oracle_key_recipient",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "oracle_value_recipient",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint32",
-              "name": "unlock_sender",
-              "type": "uint32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "unlock_receiver",
-              "type": "uint32"
-            },
-            {
-              "internalType": "bytes",
-              "name": "proof_send",
-              "type": "bytes"
-            },
-            {
-              "internalType": "uint256[5]",
-              "name": "input_send",
-              "type": "uint256[5]"
-            },
-            {
-              "internalType": "bytes",
-              "name": "proof_signature",
-              "type": "bytes"
-            },
-            {
-              "internalType": "uint256[2]",
-              "name": "input_signature",
-              "type": "uint256[2]"
-            }
-          ],
-          "internalType": "struct CreateRequestMessage[]",
-          "name": "cr",
-          "type": "tuple[]"
-        },
-        {
-          "internalType": "address",
-          "name": "deal_address",
-          "type": "address"
         },
         {
           "internalType": "uint256",
@@ -323,41 +181,13 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "denomination",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "obligor",
+          "name": "caller",
           "type": "address"
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "group_id",
           "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[3]",
-          "name": "input",
-          "type": "uint256[3]"
-        }
-      ],
-      "name": "deposit",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "caller",
-          "type": "address"
         },
         {
           "internalType": "address",
@@ -396,6 +226,11 @@
           "internalType": "address",
           "name": "account",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "groupId",
+          "type": "uint256"
         }
       ],
       "name": "getNonce",
@@ -415,6 +250,11 @@
           "internalType": "address",
           "name": "account",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "groupId",
+          "type": "uint256"
         },
         {
           "internalType": "uint256",
@@ -442,9 +282,9 @@
               "type": "address"
             },
             {
-              "internalType": "address",
-              "name": "recipient",
-              "type": "address"
+              "internalType": "uint256",
+              "name": "group_id",
+              "type": "uint256"
             },
             {
               "internalType": "address",
@@ -480,6 +320,11 @@
               "internalType": "address",
               "name": "deal_address",
               "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_group_id",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
@@ -558,9 +403,9 @@
               "type": "address"
             },
             {
-              "internalType": "address",
-              "name": "recipient",
-              "type": "address"
+              "internalType": "uint256",
+              "name": "group_id",
+              "type": "uint256"
             },
             {
               "internalType": "address",
@@ -596,6 +441,11 @@
               "internalType": "address",
               "name": "deal_address",
               "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_group_id",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
@@ -655,41 +505,13 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "denomination",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "obligor",
+          "name": "caller",
           "type": "address"
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "group_id",
           "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[5]",
-          "name": "input",
-          "type": "uint256[5]"
-        }
-      ],
-      "name": "withdraw",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "caller",
-          "type": "address"
         },
         {
           "internalType": "address",
@@ -728,11 +550,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 1566
+          "start": 10332
         },
         {
           "length": 20,
-          "start": 12882
+          "start": 12650
         }
       ]
     }
@@ -742,11 +564,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 1006
+          "start": 9684
         },
         {
           "length": 20,
-          "start": 12322
+          "start": 12002
         }
       ]
     }

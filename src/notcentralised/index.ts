@@ -13,9 +13,10 @@
  Author: @NumbersDeFi 
 */
 
-export { NotVault }  from './notvault';
+export { NotVault, WalletDB }  from './notvault';
 export { Tokens, SendRequest, Balance, zeroAddress } from './tokens';
 export { Deals } from './deals';
+export { Groups, Policy } from './groups';
 export { Credentials, Credential, Schema, Proof, flattenObject, unflattenObject } from './credentials';
 export { Files, FileEntry } from './files';
 export { ServiceBus } from './servicebus';
