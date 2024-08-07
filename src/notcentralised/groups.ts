@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.0 (deals.ts)
+ Groups SDK for Typescript v0.9.569 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -116,7 +116,6 @@ export class Groups
             throw new Error('Not Implemented Yet') 
         }
         
-        // const tx = await this.vault.confidentialGroup?.populateTransaction.addPolicy(walletData.address, deal.group_id, policyId, policy);
         const tx = await this.vault.confidentialGroup?.populateTransaction.addPolicyMeta(walletData.address, groupId, policyId, { policy_type: policy.policy_type, start: policy.start, expiry: policy.expiry, counter: 0, maxUse: policy.maxUse, callers: policy.callers, minSignatories: policy.minSignatories });
         return tx;
     }
@@ -125,7 +124,6 @@ export class Groups
         return this.tokens.getBalance(denomination, obligor, id);
     }
 
-    // SEND FROM GROUP
     sendTx = async (
         group: { id: BigInt, vault: NotVault, groups: Groups},
         policy: Policy,
@@ -156,8 +154,7 @@ export class Groups
     }> => {
         const walletData = this.vault.getWalletData();
         const address = walletData.address;
-        // const publicKey = walletData.publicKey;
-        const groupId = group.id;//walletData.groupId;
+        const groupId = group.id;
 
         const publicKey = group.vault.getWalletData().publicKey;
         
@@ -171,8 +168,6 @@ export class Groups
 
         const counterPublicKey =this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
         
-
-        // const senderNonce = await this.vault.confidentialVault.getNonce(address, groupId ?? BigInt(0));
         const senderNonce = await this.vault.confidentialVault.getNonce(group.vault.getWalletData().address, groupId ?? BigInt(0));
 
         const beforeBalance = await group.groups.getBalance(group.id, denomination, obligor);
@@ -250,7 +245,6 @@ export class Groups
             .populateTransaction
             .createRequestMeta(
                 walletData.address, 
-                // group.vault.getWalletData().address,
                 groupId ?? BigInt(0), 
                 this.vault.confidentialVault.address,
                 [{ 
@@ -291,23 +285,18 @@ export class Groups
         };
     }
 
-    // ACCEPTS TO GROUP
     retreiveTx = async (group: { id: BigInt, vault: NotVault, groups: Groups}, idHash: string, denomination: string, obligor: string) : Promise<{acceptRequestTx: PopulatedTransaction, privateAfterBalance: string}> => {
         const walletData = this.vault.getWalletData();
         const address = walletData.address;
-        // const publicKey = walletData.publicKey;
-
+        
         if(!(address && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet && this.vault.confidentialGroup))
             throw new Error('Vault is not initialised');
         
         const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
-        // const beforeBalance = await this.tokens.getBalance(denomination, obligor);
         const beforeBalance = await group.groups.getBalance(group.id, denomination, obligor);
 
-        // const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, address, idHash);
         const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash);
         
-        // const publicKey = await this.vault.db?.getPublicKey(sendRequest.sender) ?? '';
         const publicKey = group.vault.getWalletData().publicKey ?? '';
 
         const amount = BigInt(await group.vault.decrypt(privateAmount));

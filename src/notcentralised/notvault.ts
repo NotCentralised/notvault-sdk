@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.9.0 (notvault.ts)
+ NotVault SDK for Typescript v0.9.569 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -28,7 +28,6 @@ import { zeroAddress } from './tokens';
 import { getConfig, Config } from './config';
 
 import { metaMaskEncrypt, metaMaskDecrypt, decrypt, encrypt, encryptedBySecret, decryptBySecret, encryptSign, sign } from './encryption';
-import { ExitStatus } from 'typescript';
 
 (BigInt.prototype as any).toJSON = function () {
     return this.toString();
@@ -102,14 +101,12 @@ export class NotVault
     }
 
     private address?: string;
-    // private groupId?: string;
     private publicKey?: string;
     private privateKey?: string;
     private contactId?: string;
 
     login = async (
             address: string, 
-            // groupId: string,
             decryptCallback: (encryptedSecret: string) => Promise<string>,
             successCallback: (publicKey: string, contactId: string) => Promise<void>,
             enterSecretCallback: () => Promise<void>,
@@ -137,14 +134,10 @@ export class NotVault
                         const contactId: string = await decrypt(privateKey, encryptedContactId);
                         
                         this.address = address;
-                        // this.publicKey = publicKey;
                         this.privateKey = privateKey;
-                        // this.privateKey = groupId && groupId != '' && groupId != '0' ? (privateKey.slice(0,-`00${groupId}`.length) + `00${groupId}`) : privateKey;
                         this.publicKey = EthCrypto.publicKeyByPrivateKey(this.privateKey);
             
                         this.contactId = contactId;
-                        // this.groupId = groupId;
-
                         await successCallback(publicKey, contactId);
                     }
                 }
@@ -157,7 +150,6 @@ export class NotVault
 
     register = async (
             address: string, 
-            // groupId: string,
             contactId: string, 
             secretKey: string,
             encryptionPublicKeyCallback: () => Promise<string>,
@@ -183,26 +175,21 @@ export class NotVault
             const publicKey = _owner.publicKey;
         
             this.address = address;
-            // this.publicKey = publicKey;
             this.privateKey = privateKey;
-            // this.privateKey = groupId && groupId != '' && groupId != '0' ? (privateKey.slice(0,-groupId.length) + groupId) : privateKey;
             this.publicKey = EthCrypto.publicKeyByPrivateKey(this.privateKey);
 
             this.contactId = contactId;
-            // this.groupId = groupId;
-
+            
             await successCallback(publicKey, contactId);
     }
 
     enterSecret = async (
             address: string,
-            // groupId: string,
             secretKey: string,
             successCallback: (publicKey: string, contactId: string) => Promise<void>,
         ) => {
             if(!this.confidentialWallet)
                 throw new Error('Vault is not initialised');
-            // const publicKey = this.db ? await this.db.getPublicKey(address) : await this.confidentialWallet.getPublicKey(address);
             const encryptedPrivateKey= this.db ? await this.db.getEncryptedPrivateKey(address) : await this.confidentialWallet.getEncryptedPrivateKey(address);
             const encryptedContactId= this.db ? await this.db.getEncryptedContactId(address) : await this.confidentialWallet.getEncryptedContactId(address);
             
@@ -212,29 +199,23 @@ export class NotVault
             this.address = address;
             
             this.privateKey = privateKey;
-            // this.privateKey = groupId && groupId != '' && groupId != '0' ? (privateKey.slice(0,-`00${groupId}`.length) + `00${groupId}`) : privateKey;
             this.publicKey = EthCrypto.publicKeyByPrivateKey(this.privateKey);
             this.contactId = contactId;
-            // this.groupId = groupId;
-
+            
             await successCallback(this.publicKey, contactId);
     }
 
     enterData = async (
         address: string,
-        // groupId: string,
         privateKey: string,
         contactId: string,
     ) => {
         
         this.address = address;
-        // this.publicKey = EthCrypto.publicKeyByPrivateKey(privateKey);
         this.privateKey = privateKey;
-        // this.privateKey = groupId && groupId != '' && groupId != '0' ? (privateKey.slice(0,-`00${groupId}`.length) + `00${groupId}`) : privateKey;
         this.publicKey = EthCrypto.publicKeyByPrivateKey(this.privateKey);
             
         this.contactId = contactId;
-        // this.groupId = groupId;
 }
 
     getWalletData = () => { 
@@ -243,8 +224,7 @@ export class NotVault
         return {
             address: this.address,
             publicKey: this.publicKey,
-            contactId: this.contactId,
-            // groupId: this.groupId
+            contactId: this.contactId
         }
     }
 
