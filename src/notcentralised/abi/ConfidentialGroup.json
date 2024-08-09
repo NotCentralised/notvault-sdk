@@ -219,16 +219,6 @@
               "internalType": "uint256[5]",
               "name": "input_send",
               "type": "uint256[5]"
-            },
-            {
-              "internalType": "bytes",
-              "name": "proof_signature",
-              "type": "bytes"
-            },
-            {
-              "internalType": "uint256[2]",
-              "name": "input_signature",
-              "type": "uint256[2]"
             }
           ],
           "internalType": "struct CreateRequestMessage[]",

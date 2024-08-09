@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.569 (deals.ts)
+ Groups SDK for Typescript v0.9.669 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -177,7 +177,7 @@ export class Groups
         const privateAmount_from = await encrypt(publicKey, amount);
         const privateAmount_to = await encrypt(counterPublicKey, amount);
 
-        const proofSend = await genProof(this.vault, 'sender', { sender: address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce) });
+        // const proofSend = await genProof(this.vault, 'sender', { sender: address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce) });
         
         let proofApproveSender;
         if(oracleKeySender && oracleValueSender)
@@ -202,10 +202,11 @@ export class Groups
         const unlock_sender = unlockSender || 0;
         const unlock_receiver = unlockReceiver || 0;
 
-        const proofSignature = await genProof(this.vault, 'paymentSignature', { 
+        const proofSend = await genProof(this.vault, 'sender', { 
+            sender: address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce),
+
             denomination: denomination,
             obligor: obligor,
-            amount: amount, 
             oracle_address: oracle_address, oracle_owner: oracle_owner, 
 
             oracle_key_sender: oracle_key_sender, oracle_value_sender: oracle_value_sender, 
@@ -217,6 +218,7 @@ export class Groups
             deal_group_id: deal_group_id,
             deal_id: dealId ?? BigInt(0)
         });
+
 
         const proofPolicy = await genProof(this.vault, 'policy', { 
             group_id: groupId,
@@ -233,8 +235,7 @@ export class Groups
             deal_id: dealId ?? BigInt(0)
         });
 
-
-        const idHash = proofSignature.inputs[1];
+        const idHash = proofSend.inputs[4];
 
         const messageHash = utils.solidityKeccak256(['bytes'], [proofPolicy.solidityProof]);
         
@@ -263,10 +264,7 @@ export class Groups
                     unlock_receiver: unlock_receiver,
                 
                     proof_send: proofSend.solidityProof, 
-                    input_send: proofSend.inputs,
-
-                    proof_signature: proofSignature.solidityProof, 
-                    input_signature: proofSignature.inputs
+                    input_send: proofSend.inputs
                 }], 
                 [{
                     policy_type: 'transfer',

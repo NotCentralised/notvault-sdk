@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.569 (tokens.ts)
+ Tokens SDK for Typescript v0.9.669 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -290,7 +290,24 @@ export class Tokens
         
         const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
     
-        const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce) });
+        // const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce) });
+
+        const proofSend = await genProof(this.vault, 'sender', { 
+            sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce),
+
+            denomination: denomination,
+            obligor: obligor,
+            oracle_address: zeroAddress, oracle_owner: zeroAddress, 
+
+            oracle_key_sender: 0, oracle_value_sender: 0, 
+            oracle_key_recipient: 0, oracle_value_recipient: 0, 
+            
+            unlock_sender: 0, unlock_receiver: 0,
+
+            deal_address: walletData.address,
+            deal_group_id: BigInt(0),
+            deal_id: BigInt(0)
+        });
 
 
 
@@ -351,7 +368,6 @@ export class Tokens
         const privateAmount_from = await encrypt(walletData.publicKey, amount);
         const privateAmount_to = await encrypt(counterPublicKey, amount);
 
-        const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce) });
         
         let proofApproveSender;
         if(oracleKeySender && oracleValueSender)
@@ -376,7 +392,12 @@ export class Tokens
         const unlock_sender = unlockSender || 0;
         const unlock_receiver = unlockReceiver || 0;
 
-        const proofSignature = await genProof(this.vault, 'paymentSignature', { 
+
+        const proofSend = await genProof(this.vault, 'sender', { 
+            sender: walletData.address, 
+            senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), 
+            nonce: BigInt(senderNonce),
+
             denomination: denomination,
             obligor: obligor,
             amount: amount, 
@@ -392,7 +413,7 @@ export class Tokens
             deal_id: dealId ?? BigInt(0)
         });
 
-        const idHash = proofSignature.inputs[1];
+        const idHash = proofSend.inputs[4];
             
         const tx1 = await this.vault.confidentialVault
             .populateTransaction
@@ -414,8 +435,6 @@ export class Tokens
                     proof_send: proofSend.solidityProof, 
                     input_send: proofSend.inputs,
 
-                    proof_signature: proofSignature.solidityProof, 
-                    input_signature: proofSignature.inputs
                 }], deal_address, deal_group_id, deal_id, false);
         
         return {

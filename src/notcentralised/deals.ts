@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.569 (deals.ts)
+ Deals SDK for Typescript v0.9.669 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -441,6 +441,7 @@ export class Deals
         getFile?: (uri: string) => Promise<string>
     ) : Promise<{
         acceptTx: PopulatedTransaction,
+        txs: (PopulatedTransaction | undefined)[],
         destination: string | undefined,
         afterBalance: string | undefined,
         amounts: { idHash: string, privateAmount_from: string, privateAmount_to: string }[] | undefined
@@ -495,11 +496,9 @@ export class Deals
                     unlock_receiver: number,
                 
                     proof_send: string, 
-                    input_send: string[],
-
-                    proof_signature: string, 
-                    input_signature: string[]
-                }
+                    input_send: string[]
+                },
+                tx: PopulatedTransaction | undefined
             }[] = [];
             const beforeBalance = await this.tokens.getBalance(d.denomination, d.obligor);
             let afterBalance = beforeBalance.privateBalance;
@@ -537,18 +536,16 @@ export class Deals
                         const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender });
                         const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient });
 
-                        const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: BigInt(afterBalance), amount: BigInt( payment.amount), nonce: BigInt(senderNonce) });
-
-                        afterBalance = BigInt(afterBalance) - BigInt(payment.amount);
-
                         const deal_address = destinationAddress === '' ? this.vault.confidentialDeal?.address : destinationAddress;
 
                         const deal_group_id = dealGroupId;
-                       
-                        const proofSignature = await genProof(this.vault, 'paymentSignature', { 
+
+                        const proofSend = await genProof(this.vault, 'sender', { 
+                            sender: walletData.address, senderBalanceBeforeTransfer: BigInt(afterBalance), nonce: BigInt(senderNonce),
+                
                             denomination: d.denomination,
                             obligor: d.obligor,
-                            amount: payment.amount, 
+                            amount: BigInt( payment.amount), 
                             oracle_address: oracle_address,
                             oracle_owner: oracleOwnerAddress || zeroAddress,
                 
@@ -566,55 +563,62 @@ export class Deals
                             deal_id: dealId
                         });
 
+                        afterBalance = BigInt(afterBalance) - BigInt(payment.amount);
+
                         senderNonce++;
                         
                         const privateAmount_from = await encrypt(walletData.publicKey, payment.amount);
                         const privateAmount_to = await encrypt(counterPublicKey, payment.amount);
 
+                        const pdata = {
+                            denomination: d?.denomination, 
+                            obligor: d?.obligor,
+                        
+                            oracle_address: oracle_address,
+                            oracle_owner: oracleOwnerAddress || zeroAddress,
+
+                            oracle_key_sender: proof_sender.inputs[1],
+                            oracle_value_sender: proof_sender.inputs[0],
+
+                            oracle_key_recipient: proof_recipient.inputs[1],
+                            oracle_value_recipient: proof_recipient.inputs[0],
+                            
+                            unlock_sender: payment.unlock_sender || 0,
+                            unlock_receiver: payment.unlock_receiver || 0,
+                        
+                            proof_send: proofSend.solidityProof, 
+                            input_send: proofSend.inputs,
+                        };
+
                         payments.push({
                             privateAmount_from: privateAmount_from,
                             privateAmount_to: privateAmount_to,
-                            idHash: proofSignature.inputs[1],
-                            data: {
-                                // recipient: destinationAddress, 
-                                denomination: d?.denomination, 
-                                obligor: d?.obligor,
-                            
-                                oracle_address: oracle_address,
-                                oracle_owner: oracleOwnerAddress || zeroAddress,
-
-                                oracle_key_sender: proof_sender.inputs[1],
-                                oracle_value_sender: proof_sender.inputs[0],
-
-                                oracle_key_recipient: proof_recipient.inputs[1],
-                                oracle_value_recipient: proof_recipient.inputs[0],
-                                
-                                unlock_sender: payment.unlock_sender || 0,
-                                unlock_receiver: payment.unlock_receiver || 0,
-                            
-                                proof_send: proofSend.solidityProof, 
-                                input_send: proofSend.inputs,
-
-                                proof_signature: proofSignature.solidityProof, 
-                                input_signature: proofSignature.inputs
-                            }
+                            idHash: proofSend.inputs[4],
+                            data: pdata,
+                            tx: await this.vault.confidentialVault?.populateTransaction.createRequestMeta(walletData.address, groupId, [pdata], this.vault.confidentialDeal?.address, dealGroupId, dealId, false)
                         });
+
+                        
                     }
                 }
             })();
 
             const ps = payments.map(x=>x.data);
 
+            const txs = payments.map(x=>x.tx);
+            txs.push(await this.vault.confidentialVault?.populateTransaction.createRequestMeta(walletData.address, groupId, [], this.vault.confidentialDeal?.address, dealGroupId, dealId, true));
+
+
             const tx = await this.vault.confidentialVault
                 .populateTransaction
                 .createRequestMeta(walletData.address, groupId, ps, this.vault.confidentialDeal.address, dealGroupId, dealId, true);
 
-            return { acceptTx: tx, destination: owner, afterBalance: await encrypt(walletData.publicKey, afterBalance), amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:x.idHash } }) };
+            return { acceptTx: tx, txs: txs, destination: owner, afterBalance: await encrypt(walletData.publicKey, afterBalance), amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:x.idHash } }) };
         }
         else{
             const tx =  await this.vault.confidentialDeal.populateTransaction.acceptMeta(walletData.address, dealId);
 
-            return { acceptTx: tx, destination: undefined, afterBalance: undefined, amounts: undefined };
+            return { acceptTx: tx, txs: [], destination: undefined, afterBalance: undefined, amounts: undefined };
         }
     }
 

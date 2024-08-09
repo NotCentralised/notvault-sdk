@@ -135,16 +135,6 @@
               "internalType": "uint256[5]",
               "name": "input_send",
               "type": "uint256[5]"
-            },
-            {
-              "internalType": "bytes",
-              "name": "proof_signature",
-              "type": "bytes"
-            },
-            {
-              "internalType": "uint256[2]",
-              "name": "input_signature",
-              "type": "uint256[2]"
             }
           ],
           "internalType": "struct CreateRequestMessage[]",
@@ -550,11 +540,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 10332
+          "start": 6693
         },
         {
           "length": 20,
-          "start": 12650
+          "start": 12603
         }
       ]
     }
@@ -564,11 +554,11 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 9684
+          "start": 6045
         },
         {
           "length": 20,
-          "start": 12002
+          "start": 11955
         }
       ]
     }
