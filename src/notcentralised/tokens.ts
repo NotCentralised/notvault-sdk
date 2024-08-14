@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.669 (tokens.ts)
+ Tokens SDK for Typescript v0.9.869 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -18,14 +18,14 @@ import { NotVault } from './notvault';
 
 import * as EthCrypto from "eth-crypto";
 
-import { Contract, PopulatedTransaction } from 'ethers';
+import { utils, Contract, PopulatedTransaction } from 'ethers';
 import ConfidentialTreasury from './abi/ConfidentialTreasury.json';
 
 import { encrypt } from './encryption';
 import { genProof } from './proof';
 
 export type SendRequest = {
-    idHash: bigint,
+    idHash: string,//bigint,
     sender: string,
     amount: bigint,
     created: number,
@@ -86,7 +86,6 @@ export class Tokens
         if(!this.vault.confidentialDeal)
             throw new Error('Deal is not initialised');
         
-        // const group_id = groupId ?? walletData.groupId ?? BigInt(0);
         const group_id = groupId ?? BigInt(0);
 
         const privateBalance = this.vault.db?.privateBalanceOf ? await this.vault.db?.privateBalanceOf(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor) : await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, denomination);
@@ -101,16 +100,17 @@ export class Tokens
             _decryptedBalance = _encryptedBalance === '' ? BigInt(0) : (BigInt(await this.vault.decrypt(privateBalance)));
 
             const __lockedOut = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), true);
-            
+
             if(__lockedOut.length > 0){
             
                 _lockedOut = await Promise.all(__lockedOut.filter((element: any) => element.denomination === denomination).map(async (element: any) => {
-                    const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash.toString()) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
+                    const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', `0x${BigInt(element.idHash).toString(16)}`) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, `0x${BigInt(element.idHash).toString(16)}`);
+                    
                     const _amount = await this.vault.decrypt(__amount);
                     return {
-                        idHash: element.idHash,
+                        idHash: `0x${BigInt(element.idHash).toString(16)}`,
                         sender: element.sender,
-                        // recipient: element.recipient,
+                        
                         amount: BigInt(_amount),
                         created: Number(element.created),
                         unlock_sender: Number(element.unlock_sender),
@@ -140,11 +140,8 @@ export class Tokens
 
         let __lockedIn : SendRequest[] = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), false);
 
-        // console.log("--- __lockedIn: ", group_id, " <-> ", __lockedIn)
-
         const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
         const _dealLock = await Promise.all(_deals.map(async deal => {
-            // console.log("--- _deals: ", deal)
             return await this.vault.confidentialVault?.getSendRequestByAddress(this.vault.confidentialDeal?.address, group_id, deal.tokenId, false);
         }));
 
@@ -152,12 +149,13 @@ export class Tokens
 
         if(__lockedIn.length > 0)
             _lockedIn = await Promise.all(__lockedIn.filter((element: any) => element.denomination === denomination).map(async element => {
-                const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', element.idHash) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, element.idHash);
+                const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', `0x${BigInt(element.idHash).toString(16)}`) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, `0x${BigInt(element.idHash).toString(16)}`);
+
                 const _amount = await this.vault.decrypt(__amount);
                 return {
-                    idHash: element.idHash,
+                    idHash: `0x${BigInt(element.idHash).toString(16)}`,
                     sender: element.sender,
-                    // recipient: element.recipient,
+
                     amount: BigInt(_amount),
                     created: Number(element.created),
                     unlock_sender: Number(element.unlock_sender),
@@ -283,38 +281,49 @@ export class Tokens
         const group_id = BigInt(0);
     
         const senderNonce = await this.vault.confidentialVault.getNonce(walletData.address, group_id);
-
         const beforeBalance = await this.getBalance(denomination, obligor);
-    
-        const afterBalance = BigInt(beforeBalance.privateBalance) - BigInt(amount);
-        
+        const afterBalance = BigInt(beforeBalance.privateBalance) - BigInt(amount);    
         const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
     
-        // const proofSend = await genProof(this.vault, 'sender', { sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce) });
-
         const proofSend = await genProof(this.vault, 'sender', { 
-            sender: walletData.address, senderBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount, nonce: BigInt(senderNonce),
+            sender: walletData.address, 
+            senderBalanceBeforeTransfer: beforeBalance.privateBalance, 
+            nonce: BigInt(senderNonce),
 
             denomination: denomination,
             obligor: obligor,
-            oracle_address: zeroAddress, oracle_owner: zeroAddress, 
 
-            oracle_key_sender: 0, oracle_value_sender: 0, 
-            oracle_key_recipient: 0, oracle_value_recipient: 0, 
-            
-            unlock_sender: 0, unlock_receiver: 0,
+            amount: amount, 
+            count: 1,
 
             deal_address: walletData.address,
             deal_group_id: BigInt(0),
             deal_id: BigInt(0)
         });
 
+        const idHash = utils.solidityKeccak256([
+            "uint256", "uint256",
 
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256"
+
+        ], [
+            proofSend.inputs[4], 0,
+
+            0, 0, 
+
+            0, 0, 
+            0, 0, 
+        
+            0, 0
+        ]);
 
         const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
         
         return {
-            idHash: proofSend.inputs[4],
+            idHash: `0x${BigInt(idHash).toString(16)}`,
             withdrawTx: tx1,
             privateAfterBalance: privateAfterBalance,
         };
@@ -400,27 +409,42 @@ export class Tokens
 
             denomination: denomination,
             obligor: obligor,
-            amount: amount, 
-            oracle_address: oracle_address, oracle_owner: oracle_owner, 
-
-            oracle_key_sender: oracle_key_sender, oracle_value_sender: oracle_value_sender, 
-            oracle_key_recipient: oracle_key_recipient, oracle_value_recipient: oracle_value_recipient, 
             
-            unlock_sender: unlock_sender, unlock_receiver: unlock_receiver,
+            amount: amount, 
+            count: 1,
 
             deal_address: deal_address,
             deal_group_id: deal_group_id,
             deal_id: dealId ?? BigInt(0)
         });
 
-        const idHash = proofSend.inputs[4];
+        const idHash = utils.solidityKeccak256([
+            "uint256", "uint256",
+
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256"
+
+            ], [proofSend.inputs[4], 0,
+
+                oracle_address, oracle_owner,
+
+                oracle_key_sender,
+                proofApproveSender ? proofApproveSender.inputs[0] : oracle_value_sender,
+                oracle_key_recipient,
+                proofApproveRecipient ? proofApproveRecipient.inputs[0] : oracle_value_recipient,
+
+                unlock_sender,
+                unlock_receiver,
+            ]);
+        
             
         const tx1 = await this.vault.confidentialVault
             .populateTransaction
-            .createRequestMeta(walletData.address, group_id, [{ 
-                    denomination: denomination, 
-                    obligor: obligor,
-                
+            .createRequestMeta(
+                walletData.address, group_id, 
+                [{ 
                     oracle_address: oracle_address,
                     oracle_owner: oracle_owner,
 
@@ -431,14 +455,24 @@ export class Tokens
 
                     unlock_sender: unlock_sender,
                     unlock_receiver: unlock_receiver,
-                
-                    proof_send: proofSend.solidityProof, 
-                    input_send: proofSend.inputs,
+                }], 
+                {
+                    proof: proofSend.solidityProof, 
+                    input: proofSend.inputs,
+                },
+                {
+                    denomination: denomination,
+                    obligor: obligor,
 
-                }], deal_address, deal_group_id, deal_id, false);
+                    deal_address: deal_address,
+                    deal_group_id: deal_group_id,
+                    deal_id: deal_id
+                },
+                false
+            );
         
         return {
-            idHash: idHash, 
+            idHash: `0x${BigInt(idHash).toString(16)}`, 
             createRequestTx: tx1, 
             privateAfterBalance: privateAfterBalance, 
             privateAfterAmount_from: privateAmount_from, 
@@ -452,12 +486,11 @@ export class Tokens
             throw new Error('Vault is not initialised');
 
         const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
+
         const beforeBalance = await this.getBalance(denomination, obligor);
+        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, walletData.address, `0x${BigInt(idHash).toString(16)}`) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
 
-        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, walletData.address, idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
-    
         const amount = BigInt(await this.vault.decrypt(privateAmount));
-
         const afterBalance = await encrypt(walletData.publicKey, beforeBalance.privateBalance + amount);
 
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });

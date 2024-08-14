@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Documents SDK for Typescript v0.9.669 (credentials.ts)
+ Documents SDK for Typescript v0.9.869 (credentials.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -33,6 +33,7 @@ export type Schema = {
         id: string;
         name: string;
         type: "string" | "number" | "date";
+        decimals?: number;
     }[];
 };
 
@@ -142,11 +143,9 @@ export class Credentials
         let { obj: dateObject, schema: _ } = getObject(rawData, { id: schema.id, type: schema.type });
 
         const encodedDocument = encodeData(dateObject, schema);
-
         const proof = await generateProof(this.vault as NotVault, query, salt, schema, encodedDocument, false);
-
         const signature = await this.vault.sign(proof);
-
+        
         return {
             query: query,
             proof: proof,
@@ -177,8 +176,9 @@ export class Credentials
         });
 
         const r = recoverSignature({ message: proof.proof, signature: proof.signature })
+
         const check = await verifyProof(this.vault, schema.type, proof.proof);
-        
+
         if(check && r.signer == (signer !== undefined && signer !== null ? signer : r.signer)){
 
             const encodedDocument = encodeData(valuesCopy, schema);
@@ -368,12 +368,19 @@ const generateProof = async (vault: NotVault, query: Record<string, any>, salt: 
     const constraints = _query.constraints ? Object.keys(_query.constraints) : [];
 
     const data = keys.map((key, i)=>{
+
+        const constraint = constraints.includes(key) ? (_query.constraints as IIndexable)[key] : { upper: (2 ** 36 - 1), lower: 0 };
+
+        if(credentialsObject.fields[key].decimals < countDecimals(constraint.upper) || credentialsObject.fields[key].decimals < countDecimals(constraint.lower)){
+            console.log(credentialsObject.fields[key].decimals, countDecimals(constraint.upper), countDecimals(constraint.lower))
+            throw Error(`constraint decimals must equal schema's: ${key}`)
+        }
         
         return {
             value: key,
             type: credentialsObject.fields[key].type,
             code: _query.fields.includes(key) || constraints.includes(key) ? 1 : 0,
-            constraint: constraints.includes(key) ? (_query.constraints as IIndexable)[key] : { upper: (2 ** 36 - 1), lower: 0 }
+            constraint: { upper: Math.round(constraint.upper * (10**credentialsObject.fields[key].decimals)), lower: Math.round(constraint.lower * (10**credentialsObject.fields[key].decimals)) }
         }
     });
 
@@ -525,7 +532,7 @@ export const flattenObject = (obj: Record<string, any>, queryFlag: boolean) => {
 
 const structureQuery = (query: Record<string,any>, schema: Schema) => {
     const fquery = flattenObject(query, true);
-    
+
     const flatObj: Record<string, any> = {}
     schema.fields.forEach((x: any) => {
         flatObj[x.id] = x.type;
@@ -549,12 +556,12 @@ const structureQuery = (query: Record<string,any>, schema: Schema) => {
             if(key in stringArrKeys) {
                 stringArrKeys[key].forEach((y: any) => flatQuery[y] = fquery[key]);
             }
-            else if(Object.keys(fquery[key]).length === 2){
-                if(!isNaN(+fquery[key].min) && !isNaN(+fquery[key].max))
-                    flatQuery[key] = fquery[key];
-                else if(Array.isArray(fquery[key]) && typeof fquery[key][0] !== 'string')
-                    flatQuery[key] = [0, 1].map(i => new Date(fquery[key][i].unix() * 1000).toISOString());
-            }
+            // else if(Object.keys(fquery[key]).length === 2){
+            //     if(!isNaN(+fquery[key].min) && !isNaN(+fquery[key].max))
+            //         flatQuery[key] = fquery[key];
+            //     else if(Array.isArray(fquery[key]) && typeof fquery[key][0] !== 'string')
+            //         flatQuery[key] = [0, 1].map(i => new Date(fquery[key][i].unix() * 1000).toISOString());
+            // }
             else if(typeof fquery[key] !== 'object')
                 flatQuery[key] = fquery[key];
         }
@@ -578,18 +585,33 @@ const structureQuery = (query: Record<string,any>, schema: Schema) => {
             else if(Object.keys(value).length === 0 && value) {
                 _query.fields.push(key);
             }
-            else if(value.length === 2) {
-                let min = Date.parse(value[0]);
-                let max = Date.parse(value[1]);
-                _query.constraints[key] = {
-                    upper: max,
-                    lower: min
-                };
-            }
+            // else if(value.length === 2) {
+            //     let min = Date.parse(value[0]);
+            //     let max = Date.parse(value[1]);
+            //     _query.constraints[key] = {
+            //         upper: max,
+            //         lower: min
+            //     };
+            // }
         }
     });
 
     return _query;
+}
+
+const isFloatButNotWholeNumber = (value: any): boolean => {
+    return typeof value === 'number' && !Number.isInteger(value) && Number.isFinite(value);
+}
+
+const countDecimals = (value: number): number => {
+    if (Math.floor(value) === value) {
+        return 0; // No decimal places for whole numbers
+    }
+
+    const valueAsString = value.toString();
+    const decimalPart = valueAsString.split('.')[1];
+
+    return decimalPart ? decimalPart.length : 0;
 }
 
 const getObject = (rawData: Record<string, any>, schemaMeta: {id: string, type: string}) => {
@@ -605,7 +627,25 @@ const getObject = (rawData: Record<string, any>, schemaMeta: {id: string, type: 
             return {
                 id: x,
                 name: x,
-                type: type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x]))&& isFinite(Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
+                type: 
+                    type === "string" && dateRegEx.test(flatObj[x]) ? 
+                    "date" : 
+
+                    type === "string" && !isNaN(+Number(flatObj[x]))&& isFinite(Number(flatObj[x])) ? 
+                    "number" :
+
+                    type === "number" ? 
+                    "number" : 
+
+                    "string",
+                decimals: 
+                    type === "string" && !isNaN(+Number(flatObj[x]))&& isFinite(Number(flatObj[x])) && isFloatButNotWholeNumber(Number(flatObj[x])) ? 
+                    countDecimals(Number(flatObj[x])) : 
+
+                    type === "number" && isFloatButNotWholeNumber(Number(flatObj[x])) ? 
+                    countDecimals(Number(flatObj[x])) : 
+
+                    0
             }
         })
     };
@@ -613,9 +653,27 @@ const getObject = (rawData: Record<string, any>, schemaMeta: {id: string, type: 
     let dateObject : Record<string, any> = {};
     Object.keys(flatObj).map(x => {
         let type = x === null ? null : Array.isArray(x) ? 'array' : typeof flatObj[x];
-        type = type === "string" && dateRegEx.test(flatObj[x]) ? "date" : type === "string" && !isNaN(+Number(flatObj[x])) && isFinite(Number(flatObj[x])) ? "number" : type === "number" ? "number" : "string"
+        type = 
+            type === "string" && dateRegEx.test(flatObj[x]) ? 
+            "date" : 
 
-        dateObject[x] = type === "date" ? new Date(Date.parse(flatObj[x])).toISOString() : type === "number" && isFinite(Number(flatObj[x])) ? Number(flatObj[x]) : flatObj[x];
+            type === "string" && !isNaN(+Number(flatObj[x])) && isFinite(Number(flatObj[x])) ? 
+            "number" : 
+
+            type === "number" ? 
+            "number" : 
+
+            "string"
+
+        dateObject[x] = 
+            type === "date" ? 
+            new Date(Date.parse(flatObj[x])).toISOString() : 
+
+            type === "number" && isFinite(Number(flatObj[x])) ? 
+
+            Math.round(Number(flatObj[x]) * (10 ** countDecimals(Number(flatObj[x])))) :
+            
+            flatObj[x];
     })
     
     const constraints : Record<string, any> = {};

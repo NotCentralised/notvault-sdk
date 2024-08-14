@@ -162,16 +162,6 @@
           "components": [
             {
               "internalType": "address",
-              "name": "denomination",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "obligor",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
               "name": "oracle_address",
               "type": "address"
             },
@@ -209,21 +199,28 @@
               "internalType": "uint32",
               "name": "unlock_receiver",
               "type": "uint32"
-            },
-            {
-              "internalType": "bytes",
-              "name": "proof_send",
-              "type": "bytes"
-            },
-            {
-              "internalType": "uint256[5]",
-              "name": "input_send",
-              "type": "uint256[5]"
             }
           ],
           "internalType": "struct CreateRequestMessage[]",
           "name": "cr",
           "type": "tuple[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[7]",
+              "name": "input",
+              "type": "uint256[7]"
+            }
+          ],
+          "internalType": "struct SendProof",
+          "name": "proof",
+          "type": "tuple"
         },
         {
           "components": [
@@ -253,19 +250,36 @@
           "type": "tuple[]"
         },
         {
-          "internalType": "address",
-          "name": "deal_address",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "deal_group_id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "deal_id",
-          "type": "uint256"
+          "components": [
+            {
+              "internalType": "address",
+              "name": "denomination",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "obligor",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "deal_address",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_group_id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_id",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Payment",
+          "name": "payment",
+          "type": "tuple"
         },
         {
           "internalType": "bool",

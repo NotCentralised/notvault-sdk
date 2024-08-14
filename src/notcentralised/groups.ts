@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.669 (deals.ts)
+ Groups SDK for Typescript v0.9.869 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -177,8 +177,6 @@ export class Groups
         const privateAmount_from = await encrypt(publicKey, amount);
         const privateAmount_to = await encrypt(counterPublicKey, amount);
 
-        // const proofSend = await genProof(this.vault, 'sender', { sender: address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce) });
-        
         let proofApproveSender;
         if(oracleKeySender && oracleValueSender)
             proofApproveSender = await genProof(this.vault, 'approver', { key: oracleKeySender, value: oracleValueSender });
@@ -203,16 +201,15 @@ export class Groups
         const unlock_receiver = unlockReceiver || 0;
 
         const proofSend = await genProof(this.vault, 'sender', { 
-            sender: address, senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), amount: BigInt(amount), nonce: BigInt(senderNonce),
+            sender: address, 
+            senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), 
+            nonce: BigInt(senderNonce),
 
             denomination: denomination,
             obligor: obligor,
-            oracle_address: oracle_address, oracle_owner: oracle_owner, 
 
-            oracle_key_sender: oracle_key_sender, oracle_value_sender: oracle_value_sender, 
-            oracle_key_recipient: oracle_key_recipient, oracle_value_recipient: oracle_value_recipient, 
-            
-            unlock_sender: unlock_sender, unlock_receiver: unlock_receiver,
+            amount: BigInt(amount), 
+            count: 1,
 
             deal_address: deal_address,
             deal_group_id: deal_group_id,
@@ -235,7 +232,26 @@ export class Groups
             deal_id: dealId ?? BigInt(0)
         });
 
-        const idHash = proofSend.inputs[4];
+        const idHash = utils.solidityKeccak256([
+            "uint256", "uint256",
+
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256",
+            "uint256", "uint256"
+
+            ], [proofSend.inputs[4], 0,
+
+                oracle_address, oracle_owner,
+
+                oracle_key_sender,
+                proofApproveSender ? proofApproveSender.inputs[0] : oracle_value_sender,
+                oracle_key_recipient,
+                proofApproveRecipient ? proofApproveRecipient.inputs[0] : oracle_value_recipient,
+
+                unlock_sender,
+                unlock_receiver,
+            ]);
 
         const messageHash = utils.solidityKeccak256(['bytes'], [proofPolicy.solidityProof]);
         
@@ -249,9 +265,6 @@ export class Groups
                 groupId ?? BigInt(0), 
                 this.vault.confidentialVault.address,
                 [{ 
-                    denomination: denomination, 
-                    obligor: obligor,
-                
                     oracle_address: oracle_address,
                     oracle_owner: oracle_owner,
 
@@ -262,20 +275,28 @@ export class Groups
 
                     unlock_sender: unlock_sender,
                     unlock_receiver: unlock_receiver,
-                
-                    proof_send: proofSend.solidityProof, 
-                    input_send: proofSend.inputs
                 }], 
+                {
+                    proof: proofSend.solidityProof, 
+                    input: proofSend.inputs
+                },
                 [{
                     policy_type: 'transfer',
                     proof: proofPolicy.solidityProof,
                     input: proofPolicy.inputs,
                     signatures: [flatSig]
                 }],
-                deal_address, deal_group_id, deal_id, false);
+                {
+                    denomination: denomination,
+                    obligor: obligor,
+
+                    deal_address: deal_address,
+                    deal_group_id: deal_group_id,
+                    deal_id: deal_id
+                }, false);
         
         return {
-            idHash: idHash, 
+            idHash: `0x${BigInt(idHash).toString(16)}`, 
             createRequestTx: tx1, 
             privateAfterBalance: privateAfterBalance, 
             privateAfterAmount_from: privateAmount_from, 
@@ -293,15 +314,16 @@ export class Groups
         const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
         const beforeBalance = await group.groups.getBalance(group.id, denomination, obligor);
 
-        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash);
-        
+        const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', `0x${BigInt(idHash).toString(16)}`) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash);
+
         const publicKey = group.vault.getWalletData().publicKey ?? '';
 
         const amount = BigInt(await group.vault.decrypt(privateAmount));
         const afterBalance = await encrypt(publicKey, beforeBalance.privateBalance + amount);
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
 
-        const tx1 = await this.vault.confidentialGroup.populateTransaction.acceptRequestMeta(address, group.id, this.vault.confidentialVault.address, idHash, proofReceive.solidityProof, proofReceive.inputs);
+
+        const tx1 = await this.vault.confidentialGroup.populateTransaction.acceptRequestMeta(address, group.id, this.vault.confidentialVault.address, BigInt(idHash), proofReceive.solidityProof, proofReceive.inputs);
         
         return {
             acceptRequestTx: tx1,
