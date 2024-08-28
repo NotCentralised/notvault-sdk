@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.869 (deals.ts)
+ Groups SDK for Typescript v0.9.969 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -168,7 +168,7 @@ export class Groups
 
         const counterPublicKey =this.vault.db ? await this.vault.db.getPublicKey(destinationAddress) : await this.vault.confidentialWallet.getPublicKey(destinationAddress);
         
-        const senderNonce = await this.vault.confidentialVault.getNonce(group.vault.getWalletData().address, groupId ?? BigInt(0));
+        const senderNonce = await this.vault.confidentialVault.getNonce(group.vault.getWalletData().address, groupId ?? BigInt(0), BigInt(0), true);
 
         const beforeBalance = await group.groups.getBalance(group.id, denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) - BigInt(amount);

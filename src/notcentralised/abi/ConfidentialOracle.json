@@ -46,24 +46,6 @@
     {
       "inputs": [
         {
-          "internalType": "bytes",
-          "name": "proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[2]",
-          "name": "input",
-          "type": "uint256[2]"
-        }
-      ],
-      "name": "setValue",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "caller",
           "type": "address"

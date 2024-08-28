@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.869 (deals.ts)
+ Deals SDK for Typescript v0.9.969 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -561,7 +561,6 @@ export class Deals
                 input: proofSend.inputs,
             }
             
-            
             await (async() => {
                 if(!d)
                     throw new Error('No Deal Found');
@@ -626,14 +625,14 @@ export class Deals
                             unlock_receiver: payment.unlock_receiver || 0
                         };
 
-                        const paymentData = {
-                            denomination: d?.denomination,
-                            obligor: d?.obligor,
+                        // const paymentData = {
+                        //     denomination: d?.denomination,
+                        //     obligor: d?.obligor,
         
-                            deal_address: this.vault.confidentialDeal?.address,
-                            deal_group_id: dealGroupId,
-                            deal_id: dealId
-                        };
+                        //     deal_address: this.vault.confidentialDeal?.address,
+                        //     deal_group_id: dealGroupId,
+                        //     deal_id: dealId
+                        // };
 
                         payments.push({
                             privateAmount_from: privateAmount_from,

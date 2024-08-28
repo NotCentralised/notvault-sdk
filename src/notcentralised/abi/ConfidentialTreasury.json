@@ -21,6 +21,11 @@
           "type": "uint256"
         },
         {
+          "internalType": "uint8",
+          "name": "customDecimals",
+          "type": "uint8"
+        },
+        {
           "internalType": "address",
           "name": "_accessControl",
           "type": "address"

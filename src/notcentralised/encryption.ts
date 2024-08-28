@@ -1,6 +1,6 @@
 /* 
 SPDX-License-Identifier: MIT
-Encryption SDK for Typescript v0.9.869 (encryption.ts)
+Encryption SDK for Typescript v0.9.969 (encryption.ts)
 
 _   _       _    _____           _             _ _              _ 
 | \ | |     | |  / ____|         | |           | (_)            | |

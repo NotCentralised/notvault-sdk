@@ -44,4 +44,10 @@ Below is a list of Typescript examples:
 
 # License
 
-MIT License.
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+# Authors
+@NumbersDeFi
+Acknowledgments
+OpenZeppelin for their ERC20 and ERC721 implementations.
+The Ethereum community for their support and contributions to the ecosystem.

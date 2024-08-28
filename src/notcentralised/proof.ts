@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Proof SDK for Typescript v0.9.869 (proof.ts)
+ Proof SDK for Typescript v0.9.969 (proof.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
