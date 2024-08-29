@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.969 (deals.ts)
+ Deals SDK for Typescript v0.9.1069 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -534,7 +534,7 @@ export class Deals
             const owner = await this.vault.confidentialDeal?.ownerOf(dealId);
             const counterPublicKey = this.vault.db ? await this.vault.db.getPublicKey(owner) : await this.vault.confidentialWallet?.getPublicKey(owner);
 
-            let senderNonce = await this.vault.confidentialVault?.getNonce(walletData.address, groupId);
+            let senderNonce = await this.vault.confidentialVault?.getNonce(walletData.address, groupId, BigInt(0), true);
 
             const deal_address = destinationAddress === '' ? this.vault.confidentialDeal?.address : destinationAddress;
             const deal_group_id = dealGroupId;
@@ -665,6 +665,7 @@ export class Deals
             return { acceptTx: tx, destination: owner, afterBalance: await encrypt(walletData.publicKey, afterBalance), amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:`0x${BigInt(x.idHash).toString(16)}` } }) };
         }
         else{
+            console.log('----- this.vault.confidentialDeal.populateTransaction.acceptMeta');
             const tx =  await this.vault.confidentialDeal.populateTransaction.acceptMeta(walletData.address, dealId);
 
             return { acceptTx: tx, destination: undefined, afterBalance: undefined, amounts: undefined };

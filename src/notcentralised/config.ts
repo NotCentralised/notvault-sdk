@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Config SDK for Typescript v0.9.969 (config.ts)
+ Config SDK for Typescript v0.9.1069 (config.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

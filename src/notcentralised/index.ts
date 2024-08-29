@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.9.969 (index.ts)
+ NotVault SDK for Typescript v0.9.1069 (index.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

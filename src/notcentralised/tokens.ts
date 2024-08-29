@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.969 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1069 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -103,8 +103,6 @@ export class Tokens
             let __lockedOut : any[] = []
             for(let i = 0; i < outNonce; i++)
                 __lockedOut.push(await this.vault.confidentialVault.getSendRequestByIndex(walletData.address, group_id, BigInt(0), i, true));
-            
-            // const __lockedOut = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), true);
 
             if(__lockedOut.length > 0){
             
@@ -144,22 +142,19 @@ export class Tokens
         }
 
         const intNonce = await this.vault.confidentialVault.getNonce(walletData.address, group_id, BigInt(0), false);
-        // let __lockedIn : SendRequest[] = await this.vault.confidentialVault.getSendRequestByAddress(walletData.address, group_id, BigInt(0), false);
+        
         let __lockedIn : any[] = []
         for(let i = 0; i < intNonce; i++)
             __lockedIn.push(await this.vault.confidentialVault.getSendRequestByIndex(walletData.address, group_id, BigInt(0), i, false));
-            
 
         const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
         const _dealLock = await Promise.all(_deals.map(async deal => {
-            const intNonce = await this.vault.confidentialVault?.getNonce(walletData.address, group_id, deal.tokenId, false);
+            const intNonce = await this.vault.confidentialVault?.getNonce(this.vault.confidentialDeal?.address, group_id, deal.tokenId, false);
 
             let __lockedIn : any[] = []
             for(let i = 0; i < intNonce; i++)
-                __lockedIn.push(await this.vault.confidentialVault?.getSendRequestByIndex(walletData.address, group_id, BigInt(0), i, false));
-            
+                __lockedIn.push(await this.vault.confidentialVault?.getSendRequestByIndex(this.vault.confidentialDeal?.address, group_id, deal.tokenId, i, false));
 
-            // return await this.vault.confidentialVault?.getSendRequestByAddress(this.vault.confidentialDeal?.address, group_id, deal.tokenId, false);
             return __lockedIn;
         }));
 
