@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.1069 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1269 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -21,7 +21,7 @@ import * as EthCrypto from "eth-crypto";
 import { utils, Contract, PopulatedTransaction } from 'ethers';
 import ConfidentialTreasury from './abi/ConfidentialTreasury.json';
 
-import { encrypt } from './encryption';
+import { encrypt, textToBigInt } from './encryption';
 import { genProof } from './proof';
 
 export type SendRequest = {
@@ -215,7 +215,7 @@ export class Tokens
         return { balance: tokenBalance.valueOf(), decimals: BigInt(10 ** Number(this.tokenDecimalCache[denomination])).valueOf()};
     }
 
-    depositTx = async (denomination: string, obligor: string, amount: bigint) : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -240,7 +240,15 @@ export class Tokens
 
         const group_id = BigInt(0);
         
-        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs);
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
+
+        // const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
+        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, {
+            policy_type: 'secret',
+            proof: proof_treasury.solidityProof,
+            input: proof_treasury.inputs,
+            signatures: []
+        });
         
         return {
             approveTx: tx,
@@ -249,7 +257,7 @@ export class Tokens
          }
     }
 
-    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint) : Promise<{depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -270,8 +278,16 @@ export class Tokens
         const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
         
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
+
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
         
-        const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs);
+        // const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
+        const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, {
+            policy_type: 'secret',
+            proof: proof_treasury.solidityProof,
+            input: proof_treasury.inputs,
+            signatures: []
+        });
         
         return {
             depositTx: tx,
@@ -279,7 +295,7 @@ export class Tokens
          }
     }
 
-    withdrawTx = async (denomination:string, obligor: string, amount: bigint) : Promise<{idHash: string, withdrawTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    withdrawTx = async (denomination:string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{idHash: string, withdrawTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
 
@@ -333,7 +349,9 @@ export class Tokens
             0, 0
         ]);
 
-        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs);
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
+        
+        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
         
         return {
             idHash: `0x${BigInt(idHash).toString(16)}`,

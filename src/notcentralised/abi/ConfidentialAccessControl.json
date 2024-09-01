@@ -9,10 +9,75 @@
           "internalType": "address",
           "name": "_policyVerifier",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_dataVerifier",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_hashVerifier",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "policy_id",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "uint32",
+              "name": "start",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "expiry",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "counter",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "maxUse",
+              "type": "uint32"
+            },
+            {
+              "internalType": "address[]",
+              "name": "callers",
+              "type": "address[]"
+            },
+            {
+              "internalType": "int8",
+              "name": "minSignatories",
+              "type": "int8"
+            }
+          ],
+          "internalType": "struct Policy",
+          "name": "policy",
+          "type": "tuple"
+        }
+      ],
+      "name": "addPolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "inputs": [
@@ -28,6 +93,24 @@
         }
       ],
       "name": "addTreasurer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256[2]",
+          "name": "input",
+          "type": "uint256[2]"
+        }
+      ],
+      "name": "addTreasurerSecret",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -93,6 +176,41 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "input",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "signatures",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct PolicyProof",
+          "name": "proof",
+          "type": "tuple"
+        }
+      ],
+      "name": "usePolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     }
   ],

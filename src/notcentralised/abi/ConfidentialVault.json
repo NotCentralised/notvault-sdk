@@ -210,13 +210,40 @@
         },
         {
           "internalType": "bytes",
-          "name": "proof",
+          "name": "proof_sender",
           "type": "bytes"
         },
         {
           "internalType": "uint256[3]",
-          "name": "input",
+          "name": "input_sender",
           "type": "uint256[3]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "input",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "signatures",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct PolicyProof",
+          "name": "policy_proof",
+          "type": "tuple"
         }
       ],
       "name": "depositMeta",
@@ -549,13 +576,40 @@
         },
         {
           "internalType": "bytes",
-          "name": "proof",
+          "name": "proof_sender",
           "type": "bytes"
         },
         {
           "internalType": "uint256[7]",
-          "name": "input",
+          "name": "input_sender",
           "type": "uint256[7]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "input",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "signatures",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct PolicyProof",
+          "name": "policy_proof",
+          "type": "tuple"
         }
       ],
       "name": "withdrawMeta",
@@ -569,15 +623,15 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 7009
+          "start": 1568
         },
         {
           "length": 20,
-          "start": 11207
+          "start": 3496
         },
         {
           "length": 20,
-          "start": 13909
+          "start": 10729
         }
       ]
     }
@@ -587,15 +641,15 @@
       "PoseidonT2": [
         {
           "length": 20,
-          "start": 6361
+          "start": 920
         },
         {
           "length": 20,
-          "start": 10559
+          "start": 2848
         },
         {
           "length": 20,
-          "start": 13261
+          "start": 10081
         }
       ]
     }

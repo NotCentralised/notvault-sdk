@@ -1,6 +1,6 @@
 /* 
 SPDX-License-Identifier: MIT
-Encryption SDK for Typescript v0.9.1069 (encryption.ts)
+Encryption SDK for Typescript v0.9.1269 (encryption.ts)
 
 _   _       _    _____           _             _ _              _ 
 | \ | |     | |  / ____|         | |           | (_)            | |
@@ -97,48 +97,86 @@ export const decryptSigned = async (privateKey: string, message: any) => {
 }
 
 export const metaMaskEncrypt = (publicKey: string, data: string): string => {
-// Returned object contains 4 properties: version, ephemPublicKey, nonce, ciphertext
-// Each contains data encoded using base64, version is always the same string
-const enc = metaEncryption.encrypt({
-    publicKey: publicKey,
-    data: data,
-    version: 'x25519-xsalsa20-poly1305',
-});
+    // Returned object contains 4 properties: version, ephemPublicKey, nonce, ciphertext
+    // Each contains data encoded using base64, version is always the same string
+    const enc = metaEncryption.encrypt({
+        publicKey: publicKey,
+        data: data,
+        version: 'x25519-xsalsa20-poly1305',
+    });
 
-// We want to store the data in smart contract, therefore we concatenate them
-// into single Buffer
-const buf = Buffer.concat([
-    Buffer.from(enc.ephemPublicKey, 'base64'),
-    Buffer.from(enc.nonce, 'base64'),
-    Buffer.from(enc.ciphertext, 'base64'),
-]);
+    // We want to store the data in smart contract, therefore we concatenate them
+    // into single Buffer
+    const buf = Buffer.concat([
+        Buffer.from(enc.ephemPublicKey, 'base64'),
+        Buffer.from(enc.nonce, 'base64'),
+        Buffer.from(enc.ciphertext, 'base64'),
+    ]);
 
-// In smart contract we are using `bytes[112]` variable (fixed size byte array)
-// you might need to use `bytes` type for dynamic sized array
-// We are also using ethers.js which requires type `number[]` when passing data
-// for argument of type `bytes` to the smart contract function
-// Next line just converts the buffer to `number[]` required by contract function
-// THIS LINE IS USED IN OUR ORIGINAL CODE:
-// return buf.toJSON().data;
+    // In smart contract we are using `bytes[112]` variable (fixed size byte array)
+    // you might need to use `bytes` type for dynamic sized array
+    // We are also using ethers.js which requires type `number[]` when passing data
+    // for argument of type `bytes` to the smart contract function
+    // Next line just converts the buffer to `number[]` required by contract function
+    // THIS LINE IS USED IN OUR ORIGINAL CODE:
+    // return buf.toJSON().data;
 
-// Return just the Buffer to make the function directly compatible with decryptData function
-return buf.toString('base64');
-// return buf.toString();
+    // Return just the Buffer to make the function directly compatible with decryptData function
+    return buf.toString('base64');
+    // return buf.toString();
 }
 
 export const metaMaskDecrypt = (account: string, data: string, metaMaskDecryptCallback: (data: string) => Promise<string>): Promise<string> => {
 
-let dataBuffer = Buffer.from(data, 'base64');
-// Reconstructing the original object outputed by encryption
-const structuredData = {
-    version: 'x25519-xsalsa20-poly1305',
-    ephemPublicKey: dataBuffer.slice(0, 32).toString('base64'),
-    nonce: dataBuffer.slice(32, 56).toString('base64'),
-    ciphertext: dataBuffer.slice(56).toString('base64'),
-};
-// Convert data to hex string required by MetaMask
-const ct = `0x${Buffer.from(JSON.stringify(structuredData), 'utf8').toString('hex')}`;
-// Send request to MetaMask to decrypt the ciphertext
-// Once again application must have acces to the account
-return metaMaskDecryptCallback(ct);
+    let dataBuffer = Buffer.from(data, 'base64');
+    // Reconstructing the original object outputed by encryption
+    const structuredData = {
+        version: 'x25519-xsalsa20-poly1305',
+        ephemPublicKey: dataBuffer.slice(0, 32).toString('base64'),
+        nonce: dataBuffer.slice(32, 56).toString('base64'),
+        ciphertext: dataBuffer.slice(56).toString('base64'),
+    };
+    // Convert data to hex string required by MetaMask
+    const ct = `0x${Buffer.from(JSON.stringify(structuredData), 'utf8').toString('hex')}`;
+    // Send request to MetaMask to decrypt the ciphertext
+    // Once again application must have acces to the account
+    return metaMaskDecryptCallback(ct);
 }
+
+export const textToBigInt = (text: string): bigint => {
+    // Convert each character to its ASCII code and concatenate the codes
+    let result = '';
+    
+    for (const char of text) {
+      // Get ASCII code of the character
+      const asciiCode = char.charCodeAt(0);
+      
+      // Pad the ASCII code to ensure it has three digits (e.g., '097' for 'a')
+      result += asciiCode.toString().padStart(3, '0');
+    }
+  
+    // Convert the concatenated string of ASCII codes to a BigInt
+    return BigInt(result);
+}
+
+export const bigIntToText = (bigIntValue: bigint): string => {
+    // Convert BigInt to a string to process each ASCII code segment
+    const bigIntString = bigIntValue.toString();
+  
+    let text = '';
+  
+    // Iterate over the string in chunks of 3 digits (since each ASCII code is 3 digits)
+    for (let i = 0; i < bigIntString.length; i += 3) {
+      // Extract a 3-digit substring
+      const asciiCodeStr = bigIntString.substring(i, i + 3);
+  
+      // Convert the ASCII code string to a number
+      const asciiCode = parseInt(asciiCodeStr, 10);
+  
+      // Convert the ASCII code to its corresponding character and append to the text
+      text += String.fromCharCode(asciiCode);
+    }
+  
+    return text;
+}
+  

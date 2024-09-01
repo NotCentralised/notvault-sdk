@@ -204,6 +204,33 @@
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "input",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "signatures",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct PolicyProof",
+          "name": "policy_proof",
+          "type": "tuple"
         }
       ],
       "name": "burnMeta",
@@ -283,6 +310,33 @@
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "policy_type",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "input",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "signatures",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct PolicyProof",
+          "name": "policy_proof",
+          "type": "tuple"
         }
       ],
       "name": "mintMeta",
