@@ -242,7 +242,6 @@ export class Tokens
         
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
 
-        // const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
         const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
             proof: proof_treasury.solidityProof,
@@ -281,7 +280,6 @@ export class Tokens
 
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
         
-        // const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
         const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
             proof: proof_treasury.solidityProof,
