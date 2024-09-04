@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.1269 (deals.ts)
+ Deals SDK for Typescript v0.9.1369 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -32,7 +32,6 @@ export type DealPackage = {
     denomination: string,
     obligor: string,
     
-
     notional: bigint,
     expiry: number
     
@@ -58,6 +57,7 @@ export type DealPackage = {
 }
 
 export type Deal = DealPackage & {
+    dealId: bigint,
     key: number,
     payments: SendRequest[],
 
@@ -131,6 +131,7 @@ export class Deals
         return {
             ...d,
             key: 0,
+            dealId: tokenId,
             payments: payments,
 
             meta: {
@@ -151,13 +152,13 @@ export class Deals
         if(!this.vault.confidentialDeal)
             throw new Error('Vault is not initialised');
 
-        const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number, cancelledOwner:number, cancelledCounterpart:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
+        const _deals: { tokenId: string, counterpart: string, owner: string, tokenUri:string, accepted:number, created:number, expiry:number, cancelledOwner:number, cancelledCounterpart:number }[] = await this.vault.confidentialDeal.getDealByOwner(walletData.address);
 
         if(_deals.length === 0)
             return [];
 
         return Promise.all(_deals
-            .map((x) => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry, 'cancelled_owner': x.cancelledOwner, 'cancelled_counterpart': x.cancelledCounterpart } })
+            .map((x) => { return { 'tokenId': BigInt(x.tokenId), counterpart: x.counterpart, owner: x.owner, 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry, 'cancelled_owner': x.cancelledOwner, 'cancelled_counterpart': x.cancelledCounterpart } })
             .map(async (x, i) => {
                 if(!this.vault.confidentialDeal)
                     throw new Error('Vault is not initialised');
@@ -190,6 +191,8 @@ export class Deals
 
                 return {
                     ...d,
+                    owner: x.owner,
+                    dealId: tokenId,
                     key: i + 1,
                     payments: payments,
 
@@ -212,13 +215,14 @@ export class Deals
         if(!this.vault.confidentialDeal)
             throw new Error('Vault is not initialised');
 
-        const _deals: { tokenId: string, tokenUri:string, accepted:number, created:number, expiry:number, cancelledOwner:number, cancelledCounterpart:number }[] = await this.vault.confidentialDeal.getDealByCounterpart(walletData.address);
+        const _deals: { tokenId: string, counterpart: string, owner: string, tokenUri:string, accepted:number, created:number, expiry:number, cancelledOwner:number, cancelledCounterpart:number }[] = await this.vault.confidentialDeal.getDealByCounterpart(walletData.address);
 
         if(_deals.length === 0)
             return [];
 
+
         return Promise.all(_deals
-            .map((x) => { return { 'tokenId': BigInt(x.tokenId), 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry, 'cancelled_owner': x.cancelledOwner, 'cancelled_counterpart': x.cancelledCounterpart } })
+            .map((x) => { return { 'tokenId': BigInt(x.tokenId), counterpart: x.counterpart, owner: x.owner, 'tokenUri': x.tokenUri, 'accepted': x.accepted, 'created': x.created, 'expiry': x.expiry, 'cancelled_owner': x.cancelledOwner, 'cancelled_counterpart': x.cancelledCounterpart } })
             .map(async (x, i) => {
                 if(!walletData.address)
                     throw new Error('Vault is not initialised');
@@ -256,6 +260,8 @@ export class Deals
     
                 return {
                     ...d,
+                    owner: x.owner,
+                    dealId: tokenId,
                     key: -(i + 1),
                     payments: payments,
                     
@@ -294,7 +300,7 @@ export class Deals
             const hashContactId = EthCrypto.hash.keccak256(pkg.counterpart.toLowerCase().trim());
             counterpartAddress = this.vault.db ? await this.vault.db.getAddressByContactId(hashContactId) : await this.vault.confidentialWallet.getAddressByContactId(hashContactId);
             if(counterpartAddress === zeroAddress)
-                counterpartAddress = pkg.deal_address;
+                counterpartAddress = pkg.counterpart;
         }
     
         let deal : DealPackage = {

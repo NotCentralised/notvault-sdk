@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Files SDK for Typescript v0.9.1269 (files.ts)
+ Files SDK for Typescript v0.9.1369 (files.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

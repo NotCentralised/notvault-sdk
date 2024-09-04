@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.1269 (deals.ts)
+ Groups SDK for Typescript v0.9.1369 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -120,8 +120,8 @@ export class Groups
         return tx;
     }
 
-    getBalance = async (id: BigInt, denomination: string, obligor: string) : Promise<Balance> => {
-        return this.tokens.getBalance(denomination, obligor, id);
+    getBalance = async (id: BigInt, denomination: string, obligor: string, type : "all" | "in" | "out" = "all") : Promise<Balance> => {
+        return this.tokens.getBalance(denomination, obligor, type, id);
     }
 
     sendTx = async (
