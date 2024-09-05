@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.1369 (deals.ts)
+ Deals SDK for Typescript v0.9.1469 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -58,6 +58,7 @@ export type DealPackage = {
 
 export type Deal = DealPackage & {
     dealId: bigint,
+    owner: string,
     key: number,
     payments: SendRequest[],
 
@@ -130,6 +131,7 @@ export class Deals
 
         return {
             ...d,
+            owner: dealStruct.owner,
             key: 0,
             dealId: tokenId,
             payments: payments,

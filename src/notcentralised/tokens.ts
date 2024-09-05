@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.1369 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1469 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
