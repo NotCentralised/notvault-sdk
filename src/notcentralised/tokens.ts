@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.1469 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1569 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -67,7 +67,7 @@ export class Tokens
         this.vault = vault;
     }
 
-    getBalance = async (denomination: string, obligor: string, type : "all" | "in" | "out" = "all", groupId? : BigInt) : Promise<Balance> => {
+    getBalance = async (denomination: string, obligor: string, type : "all" | "in" | "out" | "none" | "public" = "all", groupId? : BigInt) : Promise<Balance> => {
         let _lockedIn: SendRequest[] = [];
         let _lockedOut: SendRequest[] = [];
 
@@ -202,9 +202,21 @@ export class Tokens
                     }
                 }));      
         }
-        const { balance, decimals } = await this.tokenBalance(denomination);
 
-        return { privateBalance: _decryptedBalance, lockedOut: _lockedOut, lockedIn: _lockedIn, balance: balance, decimals: decimals };
+        if(type === "none"){
+            if (!(denomination in this.tokenDecimalCache)){
+                const { balance, decimals } = await this.tokenBalance(denomination);
+                return { privateBalance: _decryptedBalance, lockedOut: _lockedOut, lockedIn: _lockedIn, balance: balance, decimals: decimals };
+            }
+            else{
+                return { privateBalance: _decryptedBalance, lockedOut: _lockedOut, lockedIn: _lockedIn, balance: BigInt(0), decimals: BigInt(10 ** Number(this.tokenDecimalCache[denomination])).valueOf() };
+            }
+        }
+        else{
+            const { balance, decimals } = await this.tokenBalance(denomination);
+
+            return { privateBalance: _decryptedBalance, lockedOut: _lockedOut, lockedIn: _lockedIn, balance: balance, decimals: decimals };
+        }
     }
 
     private tokenDecimalCache : { [key: string]: string } = {};
@@ -358,7 +370,12 @@ export class Tokens
 
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
         
-        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs, proof_treasury.solidityProof, proof_treasury.inputs);
+        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs,{
+            policy_type: 'secret',
+            proof: proof_treasury.solidityProof,
+            input: proof_treasury.inputs,
+            signatures: []
+        });//, proof_treasury.solidityProof, proof_treasury.inputs);
         
         return {
             idHash: `0x${BigInt(idHash).toString(16)}`,
