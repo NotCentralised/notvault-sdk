@@ -12,6 +12,11 @@
         },
         {
           "internalType": "address",
+          "name": "_dataVerifier",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
           "name": "_accessControl",
           "type": "address"
         }

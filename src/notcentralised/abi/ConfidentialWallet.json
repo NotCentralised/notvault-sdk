@@ -242,6 +242,11 @@
           "type": "address"
         },
         {
+          "internalType": "uint256",
+          "name": "group_id",
+          "type": "uint256"
+        },
+        {
           "internalType": "address",
           "name": "denomination",
           "type": "address"
@@ -299,19 +304,6 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "value",
-          "type": "string"
-        }
-      ],
-      "name": "setCredentialIndex",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "caller",
           "type": "address"
@@ -323,24 +315,6 @@
         }
       ],
       "name": "setCredentialIndexMeta",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "id",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "status",
-          "type": "bool"
-        }
-      ],
-      "name": "setCredentialStatus",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -371,19 +345,6 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "value",
-          "type": "string"
-        }
-      ],
-      "name": "setFileIndex",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "caller",
           "type": "address"
@@ -395,34 +356,6 @@
         }
       ],
       "name": "setFileIndexMeta",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "vault",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "idHash",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "value",
-          "type": "string"
-        }
-      ],
-      "name": "setPrivateAmount",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -464,34 +397,6 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "vault",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "denomination",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "obligor",
-          "type": "address"
-        },
-        {
-          "internalType": "string",
-          "name": "value",
-          "type": "string"
-        }
-      ],
-      "name": "setPrivateBalance",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "caller",
           "type": "address"
         },
@@ -499,6 +404,11 @@
           "internalType": "address",
           "name": "vault",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "group_id",
+          "type": "uint256"
         },
         {
           "internalType": "address",
@@ -517,24 +427,6 @@
         }
       ],
       "name": "setPrivateBalanceMeta",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "key",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "value",
-          "type": "string"
-        }
-      ],
-      "name": "setValue",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

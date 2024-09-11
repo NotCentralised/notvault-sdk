@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.1569 (deals.ts)
+ Groups SDK for Typescript v0.9.1669 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -148,6 +148,7 @@ export class Groups
     ) : Promise<{
         idHash: string, 
         createRequestTx: PopulatedTransaction, 
+        setBalanceTx: PopulatedTransaction,
         privateAfterBalance: string, 
         privateAfterAmount_from: string, 
         privateAfterAmount_to: string
@@ -158,7 +159,7 @@ export class Groups
 
         const publicKey = group.vault.getWalletData().publicKey;
         
-        if(!(address && publicKey && this.vault.chainId && this.vault.confidentialVault && this.vault.confidentialDeal && this.vault.confidentialWallet && this.vault.confidentialGroup))
+        if(!(address && publicKey && this.vault.chainId && this.vault.confidentialVault && this.vault.confidentialDeal && this.vault.confidentialWallet && this.vault.confidentialGroup && group.vault.confidentialWallet))
             throw new Error('Vault is not initialised');
         
         const hashContactId = EthCrypto.hash.keccak256(destination.toLowerCase().trim());
@@ -201,7 +202,7 @@ export class Groups
         const unlock_receiver = unlockReceiver || 0;
 
         const proofSend = await genProof(this.vault, 'sender', { 
-            sender: address, 
+            sender: group.vault.getWalletData().address, 
             senderBalanceBeforeTransfer: BigInt(beforeBalance.privateBalance), 
             nonce: BigInt(senderNonce),
 
@@ -258,10 +259,11 @@ export class Groups
         const prefixedHash = utils.hashMessage(utils.arrayify(messageHash));
         const flatSig = await this.vault?.signer?.signMessage(utils.arrayify(prefixedHash));
     
-        const tx1 = await this.vault.confidentialGroup
+        const createRequestTx = await this.vault.confidentialGroup
             .populateTransaction
             .createRequestMeta(
                 walletData.address, 
+                // group.vault.getWalletData().address,
                 groupId ?? BigInt(0), 
                 this.vault.confidentialVault.address,
                 [{ 
@@ -294,40 +296,67 @@ export class Groups
                     deal_group_id: deal_group_id,
                     deal_id: deal_id
                 }, false);
+
+        const setBalanceTx = await group.vault.confidentialWallet.populateTransaction.setPrivateBalanceMeta(
+            group.vault.getWalletData().address,
+            this.vault.confidentialVault.address,
+            groupId ?? BigInt(0), 
+            denomination,
+            obligor,
+            privateAfterBalance
+        );
         
         return {
             idHash: `0x${BigInt(idHash).toString(16)}`, 
-            createRequestTx: tx1, 
+            createRequestTx: createRequestTx, 
+            setBalanceTx: setBalanceTx,
             privateAfterBalance: privateAfterBalance, 
             privateAfterAmount_from: privateAmount_from, 
             privateAfterAmount_to: privateAmount_to
         };
     }
 
-    retreiveTx = async (group: { id: BigInt, vault: NotVault, groups: Groups}, idHash: string, denomination: string, obligor: string) : Promise<{acceptRequestTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    retreiveTx = async (group: { vault: NotVault, groups: Groups}, idHash: string) : Promise<{acceptRequestTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         const walletData = this.vault.getWalletData();
         const address = walletData.address;
         
-        if(!(address && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet && this.vault.confidentialGroup))
+        if(!(address && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet && this.vault.confidentialGroup &&  group.vault.confidentialWallet))
             throw new Error('Vault is not initialised');
         
         const sendRequest = await this.vault.confidentialVault.getSendRequestByID(idHash);
-        const beforeBalance = await group.groups.getBalance(group.id, denomination, obligor);
+        const beforeBalance = await group.groups.getBalance(sendRequest.deal_group_id, sendRequest.denomination, sendRequest.obligor);
 
         const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', `0x${BigInt(idHash).toString(16)}`) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, group.vault.getWalletData().address ?? '', idHash);
 
         const publicKey = group.vault.getWalletData().publicKey ?? '';
 
         const amount = BigInt(await group.vault.decrypt(privateAmount));
-        const afterBalance = await encrypt(publicKey, beforeBalance.privateBalance + amount);
+        const privateAfterBalance = await encrypt(publicKey, beforeBalance.privateBalance + amount);
+        
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
 
 
-        const tx1 = await this.vault.confidentialGroup.populateTransaction.acceptRequestMeta(address, group.id, this.vault.confidentialVault.address, BigInt(idHash), proofReceive.solidityProof, proofReceive.inputs);
+        const acceptRequestTx = await this.vault.confidentialGroup.populateTransaction.acceptRequestMeta(
+            address,
+            sendRequest.deal_group_id,
+            this.vault.confidentialVault.address, 
+            BigInt(idHash), 
+            proofReceive.solidityProof, 
+            proofReceive.inputs);
+
+        const setBalanceTx = await group.vault.confidentialWallet.populateTransaction.setPrivateBalanceMeta(
+            group.vault.getWalletData().address,
+            this.vault.confidentialVault.address,
+            sendRequest.deal_group_id,
+            sendRequest.denomination,
+            sendRequest.obligor,
+            privateAfterBalance
+        );
         
         return {
-            acceptRequestTx: tx1,
-            privateAfterBalance: afterBalance
+            acceptRequestTx: acceptRequestTx,
+            setBalanceTx: setBalanceTx,
+            privateAfterBalance: privateAfterBalance
         }
     }
 }

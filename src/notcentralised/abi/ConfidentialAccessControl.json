@@ -27,6 +27,11 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
           "internalType": "uint256",
           "name": "policy_id",
           "type": "uint256"
@@ -74,7 +79,7 @@
           "type": "tuple"
         }
       ],
-      "name": "addPolicy",
+      "name": "addPolicyMeta",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -86,19 +91,6 @@
           "name": "caller",
           "type": "address"
         },
-        {
-          "internalType": "address",
-          "name": "denomination",
-          "type": "address"
-        }
-      ],
-      "name": "addTreasurer",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
         {
           "internalType": "bytes",
           "name": "proof",
@@ -110,7 +102,7 @@
           "type": "uint256[2]"
         }
       ],
-      "name": "addTreasurerSecret",
+      "name": "addSecret",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -118,37 +110,44 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "userAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "contractAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "bytes",
-          "name": "functionSignature",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "message",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes",
-          "name": "signature",
-          "type": "bytes"
+          "components": [
+            {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "contractAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "functionSignature",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "message",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct Meta[]",
+          "name": "meta",
+          "type": "tuple[]"
         }
       ],
-      "name": "executeMetaTransaction",
+      "name": "executeMultiMetaTransaction",
       "outputs": [
         {
-          "internalType": "bytes",
+          "internalType": "bytes[]",
           "name": "",
-          "type": "bytes"
+          "type": "bytes[]"
         }
       ],
       "stateMutability": "payable",
@@ -158,28 +157,9 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "caller",
+          "name": "owner",
           "type": "address"
         },
-        {
-          "internalType": "address",
-          "name": "denomination",
-          "type": "address"
-        }
-      ],
-      "name": "isTreasurer",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
         {
           "components": [
             {
@@ -208,7 +188,7 @@
           "type": "tuple"
         }
       ],
-      "name": "usePolicy",
+      "name": "usePolicyMeta",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

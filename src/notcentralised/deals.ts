@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.1569 (deals.ts)
+ Deals SDK for Typescript v0.9.1669 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -476,6 +476,7 @@ export class Deals
         getFile?: (uri: string) => Promise<string>
     ) : Promise<{
         acceptTx: PopulatedTransaction,
+        setBalanceTx: PopulatedTransaction | undefined,
         destination: string | undefined,
         afterBalance: string | undefined,
         amounts: { idHash: string, privateAmount_from: string, privateAmount_to: string }[] | undefined
@@ -484,7 +485,7 @@ export class Deals
 
         const groupId = BigInt(0);
 
-        if(!(walletData.address && walletData.publicKey && this.vault.confidentialVault && this.vault.confidentialDeal && this.vault.chainId))
+        if(!(walletData.address && walletData.publicKey && this.vault.confidentialVault && this.vault.confidentialDeal && this.vault.confidentialWallet && this.vault.chainId))
             throw new Error('Vault is not initialised');
 
         let d : DealPackage | undefined = undefined;
@@ -546,6 +547,8 @@ export class Deals
 
             const deal_address = destinationAddress === '' ? this.vault.confidentialDeal?.address : destinationAddress;
             const deal_group_id = dealGroupId;
+
+            console.log('============================================',afterBalance,'============================================')
 
 
             const proofSend = await genProof(this.vault, 'sender', { 
@@ -633,15 +636,6 @@ export class Deals
                             unlock_receiver: payment.unlock_receiver || 0
                         };
 
-                        // const paymentData = {
-                        //     denomination: d?.denomination,
-                        //     obligor: d?.obligor,
-        
-                        //     deal_address: this.vault.confidentialDeal?.address,
-                        //     deal_group_id: dealGroupId,
-                        //     deal_id: dealId
-                        // };
-
                         payments.push({
                             privateAmount_from: privateAmount_from,
                             privateAmount_to: privateAmount_to,
@@ -666,17 +660,28 @@ export class Deals
                 deal_id: dealId
             };
 
-            const tx = await this.vault.confidentialVault
+            const privateAfterBalance = await encrypt(walletData.publicKey, afterBalance);
+
+            const acceptTx = await this.vault.confidentialVault
                 .populateTransaction
                 .createRequestMeta(walletData.address, groupId, ps, proof, paymentData, true);
 
-            return { acceptTx: tx, destination: owner, afterBalance: await encrypt(walletData.publicKey, afterBalance), amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:`0x${BigInt(x.idHash).toString(16)}` } }) };
+            const setBalanceTx = await this.vault.confidentialWallet.populateTransaction.setPrivateBalanceMeta(
+                walletData.address, 
+                this.vault.confidentialVault.address,
+                groupId,
+                paymentData.denomination,
+                paymentData.obligor,
+                privateAfterBalance
+            );
+
+            return { acceptTx: acceptTx, setBalanceTx: setBalanceTx, destination: owner, afterBalance: privateAfterBalance, amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:`0x${BigInt(x.idHash).toString(16)}` } }) };
         }
         else{
             console.log('----- this.vault.confidentialDeal.populateTransaction.acceptMeta');
             const tx =  await this.vault.confidentialDeal.populateTransaction.acceptMeta(walletData.address, dealId);
 
-            return { acceptTx: tx, destination: undefined, afterBalance: undefined, amounts: undefined };
+            return { acceptTx: tx, setBalanceTx: undefined, destination: undefined, afterBalance: undefined, amounts: undefined };
         }
     }
 

@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.9.1569 (notvault.ts)
+ NotVault SDK for Typescript v0.9.1669 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -35,8 +35,8 @@ import { metaMaskEncrypt, metaMaskDecrypt, decrypt, encrypt, encryptedBySecret, 
 
 export type WalletDB = {
     // layerc.privatebalances
-    privateBalanceOf: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string) => Promise<string>
-    setPrivateBalance: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string, amount: string) => Promise<void>
+    // privateBalanceOf: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string) => Promise<string>
+    // setPrivateBalance: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string, amount: string) => Promise<void>
     
     // layerc.privateamounts
     privateAmountOf: (vaultAddress: string, address: string, idHash: string | bigint) => Promise<string>
@@ -316,7 +316,8 @@ export class NotVault
         return {
             tx: tx,
             messageHash: prefixedHash,
-            signature: flatSig
+            signature: flatSig,
+            address: this.address
         };
     }
 

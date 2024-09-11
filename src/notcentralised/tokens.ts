@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.1569 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1669 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -78,17 +78,18 @@ export class Tokens
         if(!this.vault.confidentialVault)
             throw new Error('Vault is not initialised');
 
-        if(!this.vault.db?.privateBalanceOf){
+        // if(!this.vault.db?.privateBalanceOf){
             if(!this.vault.confidentialWallet)
                 throw new Error('Wallet is not initialised');
-        }
+        // }
 
         if(!this.vault.confidentialDeal)
             throw new Error('Deal is not initialised');
         
         const group_id = groupId ?? BigInt(0);
 
-        const privateBalance = this.vault.db?.privateBalanceOf ? await this.vault.db?.privateBalanceOf(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor) : await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, denomination);
+        // const privateBalance = this.vault.db?.privateBalanceOf ? await this.vault.db?.privateBalanceOf(walletData.address, group_id.toString(), this.vault.confidentialVault.address, denomination, obligor) : await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, denomination);
+        const privateBalance = await this.vault.confidentialWallet?.privateBalanceOf(this.vault.confidentialVault.address, walletData.address, group_id, denomination, obligor);
 
         let _encryptedBalance = '';
         let _decryptedBalance = BigInt(0);
@@ -107,7 +108,7 @@ export class Tokens
             
                 _lockedOut = await Promise.all(__lockedOut.filter((element: any) => element.denomination === denomination).map(async (element: any) => {
                     const __amount = this.vault.db?.privateAmountOf ? await this.vault.db?.privateAmountOf(this.vault.confidentialVault?.address ?? '', walletData.address ?? '', `0x${BigInt(element.idHash).toString(16)}`) : await this.vault.confidentialWallet?.privateAmountOf(element.sender, this.vault.confidentialVault?.address, walletData.address, `0x${BigInt(element.idHash).toString(16)}`);
-
+                    
                     const owner = BigInt(element.deal_id) === BigInt(0) ? element.deal_address : await this.vault.confidentialDeal?.ownerOf(BigInt(element.deal_id));
                     
                     const _amount = await this.vault.decrypt(__amount);
@@ -236,7 +237,7 @@ export class Tokens
         return { balance: tokenBalance.valueOf(), decimals: BigInt(10 ** Number(this.tokenDecimalCache[denomination])).valueOf()};
     }
 
-    depositTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -245,10 +246,10 @@ export class Tokens
         if(!this.vault.confidentialVault)
             throw new Error('Vault is not initialised');
 
-        if(!this.vault.db?.setPrivateBalance){
+        // if(!this.vault.db?.setPrivateBalanceMeta){
             if(!this.vault.confidentialWallet)
                 throw new Error('Wallet is not initialised');
-        }
+        // }
 
         const beforeBalance = await this.getBalance(denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) + BigInt(amount);
@@ -257,27 +258,37 @@ export class Tokens
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
         
         const tokenProxy = new Contract(denomination, ConfidentialTreasury.abi, this.vault.signer);
-        const tx = await tokenProxy.populateTransaction.approveMeta(walletData.address, this.vault.confidentialVault.address, amount);
+        const approveTx = await tokenProxy.populateTransaction.approveMeta(walletData.address, this.vault.confidentialVault.address, amount);
 
         const group_id = BigInt(0);
         
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
 
-        const tx1 = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, {
+        const depositTx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
             proof: proof_treasury.solidityProof,
             input: proof_treasury.inputs,
             signatures: []
         });
-        
+
+        const setBalanceTx = await this.vault.confidentialWallet?.populateTransaction.setPrivateBalanceMeta(
+            walletData.address, 
+            this.vault.confidentialVault.address,
+            group_id,
+            denomination,
+            obligor,
+            privateAfterBalance
+        );
+    
         return {
-            approveTx: tx,
-            depositTx: tx1,
+            approveTx: approveTx,
+            depositTx: depositTx,
+            setBalanceTx: setBalanceTx,
             privateAfterBalance: privateAfterBalance
          }
     }
 
-    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{depositTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -286,10 +297,10 @@ export class Tokens
         if(!this.vault.confidentialVault)
             throw new Error('Vault is not initialised');
 
-        if(!this.vault.db?.setPrivateBalance){
+        // if(!this.vault.db?.setPrivateBalanceMeta){
             if(!this.vault.confidentialWallet)
                 throw new Error('Wallet is not initialised');
-        }
+        // }
 
         const group_id = BigInt(0);
 
@@ -301,30 +312,40 @@ export class Tokens
 
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
         
-        const tx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, {
+        const depositTx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
             proof: proof_treasury.solidityProof,
             input: proof_treasury.inputs,
             signatures: []
         });
+
+        const setBalanceTx = await this.vault.confidentialWallet?.populateTransaction.setPrivateBalanceMeta(
+            walletData.address, 
+            this.vault.confidentialVault.address,
+            group_id,
+            denomination,
+            obligor,
+            privateAfterBalance
+        );
         
         return {
-            depositTx: tx,
+            depositTx: depositTx,
+            setBalanceTx: setBalanceTx,
             privateAfterBalance: privateAfterBalance
          }
     }
 
-    withdrawTx = async (denomination:string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{idHash: string, withdrawTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    withdrawTx = async (denomination:string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{idHash: string, withdrawTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
 
         if(!(walletData.address && walletData.publicKey && this.vault.chainId && this.vault.confidentialVault))
             throw new Error('Vault is not initialised');
 
-        if(!this.vault.db?.setPrivateBalance){
+        // if(!this.vault.db?.setPrivateBalanceMeta){
             if(!this.vault.confidentialWallet)
                 throw new Error('Wallet is not initialised');
-        }
+        // }
 
         const group_id = BigInt(0);
     
@@ -370,16 +391,26 @@ export class Tokens
 
         const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
         
-        const tx1 = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs,{
+        const withdrawTx = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs,{
             policy_type: 'secret',
             proof: proof_treasury.solidityProof,
             input: proof_treasury.inputs,
             signatures: []
-        });//, proof_treasury.solidityProof, proof_treasury.inputs);
-        
+        });
+
+        const setBalanceTx = await this.vault.confidentialWallet.populateTransaction.setPrivateBalanceMeta(
+            walletData.address, 
+            this.vault.confidentialVault.address,
+            group_id,
+            denomination,
+            obligor,
+            privateAfterBalance
+        );
+
         return {
             idHash: `0x${BigInt(idHash).toString(16)}`,
-            withdrawTx: tx1,
+            withdrawTx: withdrawTx,
+            setBalanceTx: setBalanceTx,
             privateAfterBalance: privateAfterBalance,
         };
     }
@@ -406,6 +437,7 @@ export class Tokens
     ) : Promise<{
         idHash: string, 
         createRequestTx: PopulatedTransaction, 
+        setBalanceTx: PopulatedTransaction,
         privateAfterBalance: string, 
         privateAfterAmount_from: string, 
         privateAfterAmount_to: string
@@ -495,7 +527,7 @@ export class Tokens
             ]);
         
             
-        const tx1 = await this.vault.confidentialVault
+        const createRequestTx = await this.vault.confidentialVault
             .populateTransaction
             .createRequestMeta(
                 walletData.address, group_id, 
@@ -525,17 +557,28 @@ export class Tokens
                 },
                 false
             );
+
+        const setBalanceTx = await this.vault.confidentialWallet?.populateTransaction.setPrivateBalanceMeta(
+            walletData.address, 
+            this.vault.confidentialVault.address,
+            group_id,
+            denomination,
+            obligor,
+            privateAfterBalance
+        );
+    
         
         return {
             idHash: `0x${BigInt(idHash).toString(16)}`, 
-            createRequestTx: tx1, 
+            createRequestTx: createRequestTx, 
+            setBalanceTx: setBalanceTx,
             privateAfterBalance: privateAfterBalance, 
             privateAfterAmount_from: privateAmount_from, 
             privateAfterAmount_to: privateAmount_to
         };
     }
 
-    retreiveTx = async (idHash: string) : Promise<{acceptRequestTx: PopulatedTransaction, privateAfterBalance: string, sendRequest: any}> => {
+    retreiveTx = async (idHash: string) : Promise<{acceptRequestTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string, sendRequest: any}> => {
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.confidentialVault && this.vault.chainId && this.vault.confidentialWallet))
             throw new Error('Vault is not initialised');
@@ -546,15 +589,25 @@ export class Tokens
         const privateAmount = this.vault.db ? await this.vault.db.privateAmountOf(this.vault.confidentialVault.address, walletData.address, `0x${BigInt(idHash).toString(16)}`) :  await this.vault.confidentialWallet.privateAmountOf(sendRequest.sender, this.vault.confidentialVault.address, walletData.address, idHash);
 
         const amount = BigInt(await this.vault.decrypt(privateAmount));
-        const afterBalance = await encrypt(walletData.publicKey, beforeBalance.privateBalance + amount);
+        const privateAfterBalance = await encrypt(walletData.publicKey, beforeBalance.privateBalance + amount);
 
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
 
-        const tx1 = await this.vault.confidentialVault.populateTransaction.acceptRequestMeta(walletData.address, idHash, proofReceive.solidityProof, proofReceive.inputs);
+        const acceptRequestTx = await this.vault.confidentialVault.populateTransaction.acceptRequestMeta(walletData.address, idHash, proofReceive.solidityProof, proofReceive.inputs);
+
+        const setBalanceTx = await this.vault.confidentialWallet?.populateTransaction.setPrivateBalanceMeta(
+            walletData.address, 
+            this.vault.confidentialVault.address,
+            sendRequest.deal_group_id,
+            sendRequest.denomination,
+            sendRequest.obligor,
+            privateAfterBalance
+        );
         
         return {
-            acceptRequestTx: tx1,
-            privateAfterBalance: afterBalance,
+            acceptRequestTx: acceptRequestTx,
+            setBalanceTx: setBalanceTx,
+            privateAfterBalance: privateAfterBalance,
             sendRequest: sendRequest
         }
     }
