@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.1669 (deals.ts)
+ Deals SDK for Typescript v0.9.1769 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -547,9 +547,6 @@ export class Deals
 
             const deal_address = destinationAddress === '' ? this.vault.confidentialDeal?.address : destinationAddress;
             const deal_group_id = dealGroupId;
-
-            console.log('============================================',afterBalance,'============================================')
-
 
             const proofSend = await genProof(this.vault, 'sender', { 
                 sender: walletData.address, 

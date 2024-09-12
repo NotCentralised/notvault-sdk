@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.1669 (deals.ts)
+ Groups SDK for Typescript v0.9.1769 (group.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -316,7 +316,7 @@ export class Groups
         };
     }
 
-    retreiveTx = async (group: { vault: NotVault, groups: Groups}, idHash: string) : Promise<{acceptRequestTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    retreiveTx = async (group: { vault: NotVault, groups: Groups}, idHash: string) : Promise<{acceptRequestTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string, sendRequest: any}> => {
         const walletData = this.vault.getWalletData();
         const address = walletData.address;
         
@@ -356,7 +356,8 @@ export class Groups
         return {
             acceptRequestTx: acceptRequestTx,
             setBalanceTx: setBalanceTx,
-            privateAfterBalance: privateAfterBalance
+            privateAfterBalance: privateAfterBalance,
+            sendRequest: sendRequest
         }
     }
 }
