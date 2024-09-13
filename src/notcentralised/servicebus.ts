@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Service Bus SDK for Typescript v0.9.1769 (servicebus.ts)
+ Service Bus SDK for Typescript v0.9.1869 (servicebus.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

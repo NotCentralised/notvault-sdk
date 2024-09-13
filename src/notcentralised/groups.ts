@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.1769 (group.ts)
+ Groups SDK for Typescript v0.9.1869 (group.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -136,14 +136,14 @@ export class Groups
         oracleAddress?: string, 
         oracleOwner?: string, 
 
-        oracleKeySender?: number | string, 
-        oracleValueSender?: number | string, 
-        oracleKeyRecipient?: number | string, 
-        oracleValueRecipient?: number | string, 
+        oracleKeySender?: bigint | string, 
+        oracleValueSender?: bigint | string, 
+        oracleKeyRecipient?: bigint | string, 
+        oracleValueRecipient?: bigint | string, 
 
         unlockSender?: number, 
         unlockReceiver?:number,
-        dealId?: BigInt,
+        dealId?: bigint,
 
     ) : Promise<{
         idHash: string, 

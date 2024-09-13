@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.1769 (tokens.ts)
+ Tokens SDK for Typescript v0.9.1869 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -425,15 +425,15 @@ export class Tokens
         oracleAddress?: string, 
         oracleOwner?: string, 
 
-        oracleKeySender?: number | string, 
-        oracleValueSender?: number | string, 
-        oracleKeyRecipient?: number | string, 
-        oracleValueRecipient?: number | string, 
+        oracleKeySender?: bigint | string, 
+        oracleValueSender?: bigint | string, 
+        oracleKeyRecipient?: bigint | string, 
+        oracleValueRecipient?: bigint | string, 
 
         unlockSender?: number, 
         unlockReceiver?:number,
-        dealGroupId?: BigInt,
-        dealId?: BigInt
+        dealGroupId?: bigint,
+        dealId?: bigint
     ) : Promise<{
         idHash: string, 
         createRequestTx: PopulatedTransaction, 
