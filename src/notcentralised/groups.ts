@@ -233,6 +233,11 @@ export class Groups
             deal_id: dealId ?? BigInt(0)
         });
 
+        const messageHash = utils.solidityKeccak256(['bytes'], [proofPolicy.solidityProof]);
+        
+        const prefixedHash = utils.hashMessage(utils.arrayify(messageHash));
+        const flatSig = await this.vault?.signer?.signMessage(utils.arrayify(prefixedHash));
+
         const idHash = utils.solidityKeccak256([
             "uint256", "uint256",
 
@@ -253,11 +258,6 @@ export class Groups
                 unlock_sender,
                 unlock_receiver,
             ]);
-
-        const messageHash = utils.solidityKeccak256(['bytes'], [proofPolicy.solidityProof]);
-        
-        const prefixedHash = utils.hashMessage(utils.arrayify(messageHash));
-        const flatSig = await this.vault?.signer?.signMessage(utils.arrayify(prefixedHash));
     
         const createRequestTx = await this.vault.confidentialGroup
             .populateTransaction

@@ -25,7 +25,7 @@ import { encrypt, textToBigInt } from './encryption';
 import { genProof } from './proof';
 
 export type SendRequest = {
-    idHash: string,//bigint,
+    idHash: string,
     sender: string,
     amount: bigint,
     created: number,
