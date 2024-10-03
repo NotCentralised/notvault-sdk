@@ -263,7 +263,6 @@ export class Groups
             .populateTransaction
             .createRequestMeta(
                 walletData.address, 
-                // group.vault.getWalletData().address,
                 groupId ?? BigInt(0), 
                 this.vault.confidentialVault.address,
                 [{ 
