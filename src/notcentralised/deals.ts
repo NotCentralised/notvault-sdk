@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Deals SDK for Typescript v0.9.1969 (deals.ts)
+ Deals SDK for Typescript v0.9.2069 (deals.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -20,7 +20,7 @@ import { utils, PopulatedTransaction } from 'ethers';
 
 import * as EthCrypto from "eth-crypto";
 
-import { Tokens, SendRequest, zeroAddress } from './tokens';
+import { Tokens, SendRequest, zeroAddress, Cashflows } from './tokens';
 import { NotVault } from './notvault';
 import { genProof } from './proof';
 
@@ -61,6 +61,7 @@ export type Deal = DealPackage & {
     owner: string,
     key: number,
     payments: SendRequest[],
+    cashflows: Cashflows,
 
     meta: {
         accepted: number,
@@ -129,12 +130,15 @@ export class Deals
         if(!d)
             throw Error("Deal Not Found");
 
+        const cashflows = await this.tokens.getCashflows(id);
+
         return {
             ...d,
             owner: dealStruct.owner,
             key: 0,
             dealId: tokenId,
             payments: payments,
+            cashflows: cashflows,
 
             meta: {
                 accepted: Number(dealStruct.accepted),
@@ -191,12 +195,15 @@ export class Deals
                 if(!d)
                     throw Error("Deal Not Found");
 
+                const cashflows = await this.tokens.getCashflows(tokenId);
+
                 return {
                     ...d,
                     owner: x.owner,
                     dealId: tokenId,
                     key: i + 1,
                     payments: payments,
+                    cashflows: cashflows,
 
                     meta: {
                         accepted: Number(x.accepted),
@@ -259,6 +266,8 @@ export class Deals
 
                 if(!d)
                     throw Error("Deal Not Found");
+
+                const cashflows = await this.tokens.getCashflows(tokenId);
     
                 return {
                     ...d,
@@ -266,6 +275,7 @@ export class Deals
                     dealId: tokenId,
                     key: -(i + 1),
                     payments: payments,
+                    cashflows: cashflows,
                     
                     meta: {
                         accepted: Number(x.accepted),

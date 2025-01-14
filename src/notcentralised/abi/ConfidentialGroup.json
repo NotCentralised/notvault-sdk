@@ -131,9 +131,9 @@
               "type": "address[]"
             },
             {
-              "internalType": "int8",
+              "internalType": "uint8",
               "name": "minSignatories",
-              "type": "int8"
+              "type": "uint8"
             }
           ],
           "internalType": "struct Policy",
@@ -340,9 +340,9 @@
               "type": "address[]"
             },
             {
-              "internalType": "int8",
+              "internalType": "uint8",
               "name": "minSignatories",
-              "type": "int8"
+              "type": "uint8"
             }
           ],
           "internalType": "struct Policy[]",

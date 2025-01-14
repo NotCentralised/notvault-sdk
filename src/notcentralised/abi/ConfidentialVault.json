@@ -7,27 +7,17 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_sendVerifier",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_receiveVerifier",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_signatureVerifier",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
           "name": "_accessControl",
           "type": "address"
         },
         {
           "internalType": "address",
           "name": "_group",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_vaultUtilsAddress",
           "type": "address"
         }
       ],
@@ -618,40 +608,6 @@
       "type": "function"
     }
   ],
-  "linkReferences": {
-    "contracts/utils/PoseidonT2.sol": {
-      "PoseidonT2": [
-        {
-          "length": 20,
-          "start": 1568
-        },
-        {
-          "length": 20,
-          "start": 3558
-        },
-        {
-          "length": 20,
-          "start": 10793
-        }
-      ]
-    }
-  },
-  "deployedLinkReferences": {
-    "contracts/utils/PoseidonT2.sol": {
-      "PoseidonT2": [
-        {
-          "length": 20,
-          "start": 920
-        },
-        {
-          "length": 20,
-          "start": 2910
-        },
-        {
-          "length": 20,
-          "start": 10145
-        }
-      ]
-    }
-  }
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }
