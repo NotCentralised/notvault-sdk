@@ -286,14 +286,9 @@ export class NotVault
 
         const nonce = getNonce ? await getNonce() : await this.signer.getTransactionCount();
 
-        const gasPrice = await this.signer.getGasPrice();
-        const gasLimit = await this.signer.estimateGas(tx)
-        
         const signedTx = await this.signer.signTransaction({
             to: tx.to,
             data: tx.data,
-            gasLimit: utils.hexlify(gasLimit), // Estimate or set the gas limit
-            gasPrice: gasPrice, // Get current gas price
             nonce: nonce, // Get the nonce for the owner,
             chainId: await this.signer.getChainId()
         });
