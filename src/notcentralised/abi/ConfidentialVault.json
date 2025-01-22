@@ -19,6 +19,11 @@
           "internalType": "address",
           "name": "_vaultUtilsAddress",
           "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "_daoTreasury",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -49,7 +54,7 @@
       ],
       "name": "acceptRequestMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -173,7 +178,7 @@
       ],
       "name": "createRequestMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -243,7 +248,7 @@
       ],
       "name": "depositMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -609,7 +614,7 @@
       ],
       "name": "withdrawMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     }
   ],

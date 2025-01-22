@@ -102,9 +102,9 @@
           "type": "bytes"
         },
         {
-          "internalType": "uint256[2]",
+          "internalType": "uint256[3]",
           "name": "input",
-          "type": "uint256[2]"
+          "type": "uint256[3]"
         }
       ],
       "name": "addSecret",
@@ -183,6 +183,11 @@
               "internalType": "bytes",
               "name": "signature",
               "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
             }
           ],
           "internalType": "struct Meta[]",

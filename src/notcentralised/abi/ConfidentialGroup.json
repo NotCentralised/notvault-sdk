@@ -19,6 +19,11 @@
           "internalType": "address",
           "name": "_accessControl",
           "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "_daoTreasury",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -78,7 +83,7 @@
       ],
       "name": "acceptRequestMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -304,7 +309,7 @@
       ],
       "name": "createRequestMeta",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -401,7 +406,7 @@
           "type": "uint256"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {

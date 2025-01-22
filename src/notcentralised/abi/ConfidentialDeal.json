@@ -29,6 +29,11 @@
           "internalType": "address",
           "name": "_accessControl",
           "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "_daoTreasury",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -685,7 +690,7 @@
           "type": "uint256"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -846,25 +851,6 @@
           "internalType": "string",
           "name": "",
           "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "tokensOfOwner",
-      "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
         }
       ],
       "stateMutability": "view",

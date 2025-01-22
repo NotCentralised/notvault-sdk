@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- NotVault SDK for Typescript v0.9.9069 (notvault.ts)
+ NotVault SDK for Typescript v0.9.9969 (notvault.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -296,7 +296,7 @@ export class NotVault
         };
     }
 
-    signMetaTx = async (tx: PopulatedTransaction, getNonce?: () => Promise<number>) => {
+    signMetaTx = async (tx: PopulatedTransaction, amount: BigInt, getNonce?: () => Promise<number>) => {
         if (!(this.signer && this.address && tx.data)) throw new Error("No Signer");
 
         const messageHash = utils.solidityKeccak256(['bytes'], [tx.data]);
@@ -309,7 +309,8 @@ export class NotVault
             tx: tx,
             messageHash: prefixedHash,
             signature: flatSig,
-            address: this.address
+            address: this.address,
+            amount: amount
         };
     }
 
