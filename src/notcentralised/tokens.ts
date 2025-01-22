@@ -22,7 +22,9 @@ import { utils, Contract, PopulatedTransaction } from 'ethers';
 import ConfidentialTreasury from './abi/ConfidentialTreasury.json';
 
 import { encrypt, textToBigInt } from './encryption';
-import { genProof } from './proof';
+import { genProof, saltToBigInt } from './proof';
+
+import { v4 as uuidv4 } from 'uuid';
 
 export type SendRequest = {
     idHash: string,
@@ -399,10 +401,8 @@ export class Tokens
         if(!this.vault.confidentialVault)
             throw new Error('Vault is not initialised');
 
-        // if(!this.vault.db?.setPrivateBalanceMeta){
-            if(!this.vault.confidentialWallet)
-                throw new Error('Wallet is not initialised');
-        // }
+        if(!this.vault.confidentialWallet)
+            throw new Error('Wallet is not initialised');
 
         const beforeBalance = await this.getBalance(denomination, obligor);
         const afterBalance = BigInt(beforeBalance.privateBalance) + BigInt(amount);
@@ -414,8 +414,10 @@ export class Tokens
         const approveTx = await tokenProxy.populateTransaction.approveMeta(walletData.address, this.vault.confidentialVault.address, amount);
 
         const group_id = BigInt(0);
-        
-        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
+
+        const salt = saltToBigInt(uuidv4());
+
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret), salt: salt });
 
         const depositTx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, amount, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
@@ -450,10 +452,9 @@ export class Tokens
         if(!this.vault.confidentialVault)
             throw new Error('Vault is not initialised');
 
-        // if(!this.vault.db?.setPrivateBalanceMeta){
-            if(!this.vault.confidentialWallet)
-                throw new Error('Wallet is not initialised');
-        // }
+        if(!this.vault.confidentialWallet)
+            throw new Error('Wallet is not initialised');
+
 
         const group_id = BigInt(0);
 
@@ -463,7 +464,8 @@ export class Tokens
         
         const proofReceive = await genProof(this.vault, 'receiver', { receiverBalanceBeforeTransfer: beforeBalance.privateBalance, amount: amount });
 
-        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
+        const salt = saltToBigInt(uuidv4());
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret), salt: salt });
         
         const depositTx = await this.vault.confidentialVault.populateTransaction.depositMeta(walletData.address, group_id, denomination, obligor, 0, proofReceive.solidityProof, proofReceive.inputs, {
             policy_type: 'secret',
@@ -495,10 +497,10 @@ export class Tokens
         if(!(walletData.address && walletData.publicKey && this.vault.chainId && this.vault.confidentialVault))
             throw new Error('Vault is not initialised');
 
-        // if(!this.vault.db?.setPrivateBalanceMeta){
-            if(!this.vault.confidentialWallet)
-                throw new Error('Wallet is not initialised');
-        // }
+
+        if(!this.vault.confidentialWallet)
+            throw new Error('Wallet is not initialised');
+
 
         const group_id = BigInt(0);
     
@@ -542,7 +544,8 @@ export class Tokens
             0, 0
         ]);
 
-        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret) });
+        const salt = saltToBigInt(uuidv4());
+        const proof_treasury = await genProof(this.vault, 'approver', { key: denomination, value: textToBigInt(treasurer_secret), salt: salt });
         
         const withdrawTx = await this.vault.confidentialVault.populateTransaction.withdrawMeta(walletData.address, group_id, denomination, obligor, amount, proofSend.solidityProof, proofSend.inputs,{
             policy_type: 'secret',
@@ -617,14 +620,15 @@ export class Tokens
         const privateAmount_from = await encrypt(walletData.publicKey, amount);
         const privateAmount_to = await encrypt(counterPublicKey, amount);
 
-        
+        const salt = saltToBigInt('0');
+
         let proofApproveSender;
         if(oracleKeySender && oracleValueSender)
-            proofApproveSender = await genProof(this.vault, 'approver', { key: oracleKeySender, value: oracleValueSender });
+            proofApproveSender = await genProof(this.vault, 'approver', { key: oracleKeySender, value: oracleValueSender, salt: salt });
 
         let proofApproveRecipient;
         if(oracleKeyRecipient && oracleValueRecipient)
-            proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient});
+            proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient, salt: salt });
 
 
         const deal_address = destinationAddress === '' ? this.vault.confidentialDeal.address : destinationAddress;

@@ -21,7 +21,7 @@ import * as EthCrypto from "eth-crypto";
 
 import { Tokens, Balance, zeroAddress } from './tokens';
 import { NotVault } from './notvault';
-import { genProof } from './proof';
+import { genProof, saltToBigInt } from './proof';
 
 export type Policy = {
     policy_type: string,
@@ -194,13 +194,15 @@ export class Groups
         const privateAmount_from = await encrypt(publicKey, amount);
         const privateAmount_to = await encrypt(counterPublicKey, amount);
 
+        const salt = saltToBigInt('0');
+
         let proofApproveSender;
         if(oracleKeySender && oracleValueSender)
-            proofApproveSender = await genProof(this.vault, 'approver', { key: oracleKeySender, value: oracleValueSender });
+            proofApproveSender = await genProof(this.vault, 'approver', { key: oracleKeySender, value: oracleValueSender, salt: salt });
 
         let proofApproveRecipient;
         if(oracleKeyRecipient && oracleValueRecipient)
-            proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient});
+            proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient, salt: salt });
 
 
         const deal_address = destinationAddress === '' ? this.vault.confidentialDeal.address : destinationAddress;

@@ -20,6 +20,24 @@ interface IIndexable {
     [key: string]: any;
 }
 
+export const saltToBigInt = (str: string): BigInt[] => {
+    const size = Math.ceil(str.length / 31);
+    const arr = Array(size);
+  
+    let offset = 0;
+    for (let i = 0; i < size; i++) {
+        const substr = str.substring(offset, offset + 31).split("");
+        const ss = substr.reduce(
+            (memo, c) => memo + c.charCodeAt(0).toString(16),
+            ""
+        );
+        arr[i] = BigInt("0x" + ss);
+        offset += 31;
+    }
+
+    return arr.length >= 2 ? [arr[0], arr[1]] : [arr[0], arr[0]]
+}
+
 export const genProof = async (vault: NotVault, name: string, input: any) => {
     if(!vault.config)
         throw new Error('Vault is not initialised');

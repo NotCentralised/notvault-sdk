@@ -22,7 +22,7 @@ import * as EthCrypto from "eth-crypto";
 
 import { Tokens, SendRequest, zeroAddress, Cashflows } from './tokens';
 import { NotVault } from './notvault';
-import { genProof } from './proof';
+import { genProof, saltToBigInt } from './proof';
 
 export type DealPackage = {
     counterpart: string,
@@ -323,7 +323,6 @@ export class Deals
 
             denomination: pkg.denomination,
             obligor: pkg.obligor,
-            // amount: BigInt(pkg.initial_payments?.amount ?? 0),
 
             notional: pkg.notional,
             expiry: pkg.expiry ? pkg.expiry : Math.floor(new Date(2050,1,1).getTime() / 1000),
@@ -344,8 +343,10 @@ export class Deals
 
                         const oracle_address = payment.oracle_address || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
 
-                        const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender });
-                        const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient });
+                        const salt = saltToBigInt('0');
+
+                        const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender, salt: salt });
+                        const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient, salt: salt });
 
                         return {
                             oracle_address: oracle_address,
@@ -419,8 +420,10 @@ export class Deals
 
                 const oracle_address = payment.oracle_address || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
 
-                const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender });
-                const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient });
+                const salt = saltToBigInt('0');
+
+                const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender, salt: salt });
+                const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient, salt: salt });
 
                 return {
                     oracle_address: oracle_address,
@@ -600,8 +603,10 @@ export class Deals
 
                         const oracle_address = payment.oracle_address || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
 
-                        const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender });
-                        const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient });
+                        const salt = saltToBigInt('0');
+
+                        const proof_sender = !payment.oracle_key_sender || payment.oracle_key_sender === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_sender, value: payment.oracle_value_sender, salt: salt });
+                        const proof_recipient = !payment.oracle_key_recipient || payment.oracle_key_recipient === ''  ? { inputs: [0,0]} : await genProof(this.vault, 'approver', { key: payment.oracle_key_recipient, value: payment.oracle_value_recipient, salt: salt });
 
                         
                         afterBalance = BigInt(afterBalance) - BigInt(d.initial_payments.amount);
@@ -684,7 +689,6 @@ export class Deals
             return { acceptTx: acceptTx, setBalanceTx: setBalanceTx, destination: owner, afterBalance: privateAfterBalance, amounts: payments.map(x=> { return { privateAmount_from: x.privateAmount_from, privateAmount_to:x.privateAmount_to, idHash:`0x${BigInt(x.idHash).toString(16)}` } }) };
         }
         else{
-            console.log('----- this.vault.confidentialDeal.populateTransaction.acceptMeta');
             const tx =  await this.vault.confidentialDeal.populateTransaction.acceptMeta(walletData.address, dealId);
 
             return { acceptTx: tx, setBalanceTx: undefined, destination: undefined, afterBalance: undefined, amounts: undefined };
@@ -695,9 +699,11 @@ export class Deals
         if(!(this.vault.confidentialOracle && this.vault.chainId))
             throw new Error('Vault is not initialised');
 
+        const salt = saltToBigInt('0');
+
         const proof = await genProof(this.vault, 'approver', { key: key, value: value});
 
         const tx = await this.vault.confidentialOracle.setValueTx(proof.solidityProof, proof.inputs);
         return (await this.vault.signTx(tx)).signature;
     }
-}
+}   

@@ -418,7 +418,6 @@ const generateProof = async (vault: NotVault, query: Record<string, any>, salt: 
     const proof = await genProof(vault, schema.type, {
         data: encodedDocument.data,
         code: verificationFlag ? encodedDocument.code : codeNumbers.concat(codeTexts),
-        // code: codeNumbers.concat(codeTexts),
         constraint_upper: constraint_upper,
         constraint_lower: constraint_lower,
         salt: saltArr.length >= 2 ? [saltArr[0], saltArr[1]] : [saltArr[0], saltArr[0]]
@@ -556,12 +555,6 @@ const structureQuery = (query: Record<string,any>, schema: Schema) => {
             if(key in stringArrKeys) {
                 stringArrKeys[key].forEach((y: any) => flatQuery[y] = fquery[key]);
             }
-            // else if(Object.keys(fquery[key]).length === 2){
-            //     if(!isNaN(+fquery[key].min) && !isNaN(+fquery[key].max))
-            //         flatQuery[key] = fquery[key];
-            //     else if(Array.isArray(fquery[key]) && typeof fquery[key][0] !== 'string')
-            //         flatQuery[key] = [0, 1].map(i => new Date(fquery[key][i].unix() * 1000).toISOString());
-            // }
             else if(typeof fquery[key] !== 'object')
                 flatQuery[key] = fquery[key];
         }
@@ -585,14 +578,6 @@ const structureQuery = (query: Record<string,any>, schema: Schema) => {
             else if(Object.keys(value).length === 0 && value) {
                 _query.fields.push(key);
             }
-            // else if(value.length === 2) {
-            //     let min = Date.parse(value[0]);
-            //     let max = Date.parse(value[1]);
-            //     _query.constraints[key] = {
-            //         upper: max,
-            //         lower: min
-            //     };
-            // }
         }
     });
 

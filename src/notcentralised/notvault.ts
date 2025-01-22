@@ -34,9 +34,6 @@ import { metaMaskEncrypt, metaMaskDecrypt, decrypt, encrypt, encryptedBySecret, 
 };
 
 export type WalletDB = {
-    // layerc.privatebalances
-    // privateBalanceOf: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string) => Promise<string>
-    // setPrivateBalance: (address: string, groupId: string, vaultAddress: string, denomination: string, obligor: string, amount: string) => Promise<void>
     
     // layerc.privateamounts
     privateAmountOf: (vaultAddress: string, address: string, idHash: string | bigint) => Promise<string>

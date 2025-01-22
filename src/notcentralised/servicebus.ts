@@ -16,7 +16,7 @@
 
 import { NotVault } from './notvault';
 
-import { genProof } from './proof';
+import { genProof,saltToBigInt } from './proof';
 
 export class ServiceBus
 {
@@ -30,7 +30,9 @@ export class ServiceBus
         if(!(this.vault.confidentialServiceBus && this.vault.chainId))
             throw new Error('Vault is not initialised');
 
-        const proof = await genProof(this.vault, 'approver', { key: key, value: value});
+        const salt = saltToBigInt('0');
+
+        const proof = await genProof(this.vault, 'approver', { key: key, value: value, salt: salt});
         const value_hash = proof.inputs[0];
         
         const tx = await this.vault.confidentialServiceBus.setValue(proof.solidityProof, proof.inputs);
