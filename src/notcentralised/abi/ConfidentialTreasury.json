@@ -125,8 +125,13 @@
             },
             {
               "internalType": "address[]",
-              "name": "callers",
+              "name": "callers_address",
               "type": "address[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "callers_id",
+              "type": "uint256[]"
             },
             {
               "internalType": "uint8",

@@ -127,8 +127,13 @@
             },
             {
               "internalType": "address[]",
-              "name": "callers",
+              "name": "callers_address",
               "type": "address[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "callers_id",
+              "type": "uint256[]"
             },
             {
               "internalType": "uint8",
@@ -165,6 +170,11 @@
         },
         {
           "components": [
+            {
+              "internalType": "uint256",
+              "name": "index",
+              "type": "uint256"
+            },
             {
               "internalType": "address",
               "name": "oracle_address",
@@ -336,8 +346,13 @@
             },
             {
               "internalType": "address[]",
-              "name": "callers",
+              "name": "callers_address",
               "type": "address[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "callers_id",
+              "type": "uint256[]"
             },
             {
               "internalType": "uint8",
@@ -361,14 +376,21 @@
           "type": "address"
         },
         {
-          "internalType": "address[]",
+          "components": [
+            {
+              "internalType": "address",
+              "name": "deal_address",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deal_id",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Member[]",
           "name": "_members",
-          "type": "address[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "_ids",
-          "type": "uint256[]"
+          "type": "tuple[]"
         }
       ],
       "name": "registerGroupMeta",

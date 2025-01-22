@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.2069 (group.ts)
+ Groups SDK for Typescript v0.9.9069 (group.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -33,7 +33,9 @@ export type Policy = {
     counter: number,
     maxUse: number,
 
-    callers: string[],
+    callers_address: string[],
+    callers_id: bigint[],
+
     minSignatories: number
 }
 
@@ -52,7 +54,7 @@ export class Groups
         if(!(walletData.address && walletData.publicKey && this.vault.confidentialWallet && this.vault.confidentialGroup && this.vault.chainId))
             throw new Error('Vault is not initialised');
 
-        const policies = await this.vault.confidentialGroup.populateTransaction.registerGroupMeta(walletData.address, members.map(x=>x.address), members.map(x=>x.id));
+        const policies = await this.vault.confidentialGroup.populateTransaction.registerGroupMeta(walletData.address, members.map(x=> { return { deal_address: x.address, deal_id: x.id } }));
         return policies;
     }
 
@@ -116,7 +118,21 @@ export class Groups
             throw new Error('Not Implemented Yet') 
         }
         
-        const tx = await this.vault.confidentialGroup?.populateTransaction.addPolicyMeta(walletData.address, groupId, policyId, { policy_type: policy.policy_type, start: policy.start, expiry: policy.expiry, counter: 0, maxUse: policy.maxUse, callers: policy.callers, minSignatories: policy.minSignatories });
+        const tx = await this.vault.confidentialGroup?.populateTransaction.addPolicyMeta(
+            walletData.address, 
+            groupId, 
+            policyId, 
+            { 
+                policy_type: policy.policy_type, 
+                start: policy.start, 
+                expiry: policy.expiry, 
+                counter: 0, 
+                maxUse: policy.maxUse, 
+                callers_address: policy.callers_address,
+                callers_id: policy.callers_id, 
+                minSignatories: policy.minSignatories 
+            }
+        );
         return tx;
     }
 
@@ -266,6 +282,7 @@ export class Groups
                 groupId ?? BigInt(0), 
                 this.vault.confidentialVault.address,
                 [{ 
+                    index: 0,
                     oracle_address: oracle_address,
                     oracle_owner: oracle_owner,
 

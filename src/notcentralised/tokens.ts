@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.2069 (tokens.ts)
+ Tokens SDK for Typescript v0.9.9069 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -390,7 +390,7 @@ export class Tokens
         return { balance: tokenBalance.valueOf(), decimals: BigInt(10 ** Number(this.tokenDecimalCache[denomination])).valueOf()};
     }
 
-    depositTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret: string = '') : Promise<{approveTx: PopulatedTransaction, depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -441,7 +441,7 @@ export class Tokens
          }
     }
 
-    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret:string = '') : Promise<{depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
+    depositUnfundedTx = async (denomination: string, obligor: string, amount: bigint, treasurer_secret: string = '') : Promise<{depositTx: PopulatedTransaction, setBalanceTx: PopulatedTransaction, privateAfterBalance: string}> => {
         
         const walletData = this.vault.getWalletData();
         if(!(walletData.address && walletData.publicKey && this.vault.chainId))
@@ -685,6 +685,7 @@ export class Tokens
             .createRequestMeta(
                 walletData.address, group_id, 
                 [{ 
+                    index: 0,
                     oracle_address: oracle_address,
                     oracle_owner: oracle_owner,
 
