@@ -1,6 +1,6 @@
 /* 
  SPDX-License-Identifier: MIT
- Groups SDK for Typescript v0.9.9969 (group.ts)
+ Groups SDK for Typescript v0.9.10069 (group.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |

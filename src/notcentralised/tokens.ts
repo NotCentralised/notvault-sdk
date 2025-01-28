@@ -1,7 +1,7 @@
 
 /* 
  SPDX-License-Identifier: MIT
- Tokens SDK for Typescript v0.9.9969 (tokens.ts)
+ Tokens SDK for Typescript v0.9.10069 (tokens.ts)
 
   _   _       _    _____           _             _ _              _ 
  | \ | |     | |  / ____|         | |           | (_)            | |
@@ -631,9 +631,10 @@ export class Tokens
             proofApproveRecipient = await genProof(this.vault, 'approver', { key: oracleKeyRecipient, value: oracleValueRecipient, salt: salt });
 
 
-        const deal_address = destinationAddress === '' ? this.vault.confidentialDeal.address : destinationAddress;
-        const deal_group_id = dealGroupId ?? BigInt(0);
         const deal_id = dealId ?? BigInt(0);
+        const deal_address = deal_id > BigInt(0) /*destinationAddress === ''*/ ? this.vault.confidentialDeal.address : destinationAddress;
+        const deal_group_id = dealGroupId ?? BigInt(0);
+        
         const oracle_address = oracleAddress || (this.vault.confidentialOracle ? this.vault.confidentialOracle.address : zeroAddress);
         const oracle_owner = oracleOwner || zeroAddress;
 
@@ -681,7 +682,7 @@ export class Tokens
 
                 unlock_sender,
                 unlock_receiver,
-            ]);
+        ]);
         
             
         const createRequestTx = await this.vault.confidentialVault
